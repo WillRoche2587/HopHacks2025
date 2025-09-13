@@ -4,30 +4,8 @@
  * @returns Historical analysis and pattern recognition
  */
 export async function run(payload: any): Promise<string> {
-  const { eventType, location, date, expectedAttendance, budget } = payload
-
-  if (!eventType || !location) {
-    throw new Error('Event type and location are required for historical analysis')
-  }
-
-  try {
-    // Fetch historical data
-    const historicalData = await fetchHistoricalData(eventType, location)
-    
-    // Analyze patterns using LLM
-    const analysis = await analyzeWithLLM(historicalData, {
-      eventType,
-      location,
-      date,
-      expectedAttendance,
-      budget
-    })
-
-    return analysis
-  } catch (error) {
-    console.error('Historic events agent error:', error)
-    return `Unable to analyze historical data for ${eventType} in ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-  }
+  // Temporarily disabled - not doing anything for now
+  return "Historical analysis is currently disabled."
 }
 
 /**
