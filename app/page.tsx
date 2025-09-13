@@ -535,15 +535,17 @@ export default function CharityAI() {
           {/* Event Analysis Tab */}
           {activeTab === 'analysis' && (
             <div className="space-y-6">
+              {/* Event Details Header */}
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Event Details</h2>
+                <p className="text-muted-foreground">
+                  Provide details about your charitable event for comprehensive AI analysis
+                </p>
+              </div>
+
               {/* Event Details Form */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Event Details</CardTitle>
-                  <CardDescription>
-                    Provide details about your charitable event for comprehensive AI analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <form onSubmit={handleFormSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
