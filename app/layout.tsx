@@ -1,12 +1,22 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Space_Grotesk, DM_Sans } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+})
+
+const dmSans = DM_Sans({ 
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'Community Event Impact Predictor',
-  description: 'AI-powered event planning and impact prediction tool',
+  title: 'CharityAI - AI-Powered Charitable Event Planning',
+  description: 'Comprehensive AI-powered platform for charitable event planning, optimization, and impact prediction',
 }
 
 export default function RootLayout({
@@ -16,8 +26,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
+      <body className={`${spaceGrotesk.variable} ${dmSans.variable} font-sans`}>
+        <div className="min-h-screen bg-background">
           {children}
         </div>
       </body>

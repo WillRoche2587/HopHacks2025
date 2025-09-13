@@ -3,6 +3,7 @@ import { run as weatherAgent } from '@/lib/agents/weatherAgent'
 import { run as currentEventsAgent } from '@/lib/agents/currentEventsAgent'
 import { run as historicEventsAgent } from '@/lib/agents/historicEventsAgent'
 import { run as organizerScoringAgent } from '@/lib/agents/organizerScoringAgent'
+import { run as aiAssistantAgent } from '@/lib/agents/aiAssistantAgent'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
 /**
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate agent type
-    const validAgents = ['weather', 'currentEvents', 'historicEvents', 'organizerScoring']
+    const validAgents = ['weather', 'currentEvents', 'historicEvents', 'organizerScoring', 'aiAssistant']
     if (!validAgents.includes(agent)) {
       return NextResponse.json(
         { error: `Invalid agent type. Must be one of: ${validAgents.join(', ')}` },
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
       case 'organizerScoring':
         result = await organizerScoringAgent(payload)
         break
+      case 'aiAssistant':
+        result = await aiAssistantAgent(payload)
+        break
       default:
         return NextResponse.json(
           { error: 'Unknown agent type' },
@@ -53,8 +57,8 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    // Store result in database if eventId and userId are provided
-    if (eventId && userId) {
+    // Store result in database if eventId and userId are provided and supabase is available
+    if (eventId && userId && supabaseAdmin) {
       try {
         const { error } = await supabaseAdmin
           .from('agent_results')

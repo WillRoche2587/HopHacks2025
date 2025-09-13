@@ -1,31 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseAnonKey = process.env.SUPABASE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  console.warn('Missing Supabase environment variables. Using mock data.')
 }
 
 /**
  * Supabase client for client-side operations
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
 /**
  * Supabase client for server-side operations with service role key
  * Note: In production, use a service role key for server operations
  */
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+export const supabaseAdmin = supabaseUrl && supabaseAnonKey
+  ? createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  : null
 
 /**
  * Database types for TypeScript
@@ -54,23 +58,47 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          input_params: any
-          actuals: any
+          event_type: string
+          location: string
+          date: string
+          duration: string
+          expected_attendance: number
+          budget: number
+          audience: string
+          special_requirements: string
+          notes?: string
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          input_params: any
-          actuals?: any
+          event_type: string
+          location: string
+          date: string
+          duration: string
+          expected_attendance: number
+          budget: number
+          audience: string
+          special_requirements: string
+          notes?: string
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          input_params?: any
-          actuals?: any
+          event_type?: string
+          location?: string
+          date?: string
+          duration?: string
+          expected_attendance?: number
+          budget?: number
+          audience?: string
+          special_requirements?: string
+          notes?: string
           created_at?: string
+          updated_at?: string
         }
       }
       agent_results: {

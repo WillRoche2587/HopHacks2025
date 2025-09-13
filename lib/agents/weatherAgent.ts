@@ -1,3 +1,6 @@
+import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
+import { formatList, formatScore, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
+
 /**
  * Weather Agent - Fetches weather data for event planning using OpenWeatherMap API
  * @param payload - Contains location, date, and event details
@@ -12,15 +15,16 @@ export async function run(payload: any): Promise<string> {
 
   const weatherApiKey = process.env.WEATHER_API_KEY
   if (!weatherApiKey) {
-    throw new Error('WEATHER_API_KEY not configured')
+    console.warn('WEATHER_API_KEY not configured - using fallback weather analysis')
+    return generateFallbackWeatherAnalysis(payload)
   }
 
   try {
     // First, get coordinates for the location using OpenWeatherMap Geocoding API
     const geocodeResponse = await fetchWithRetry(
       `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${weatherApiKey}`,
-      3,
-      10000
+      2,
+      8000
     )
 
     if (!geocodeResponse.ok) {
@@ -37,8 +41,8 @@ export async function run(payload: any): Promise<string> {
     // Get current weather and forecast data
     const weatherResponse = await fetchWithRetry(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`,
-      3,
-      10000
+      2,
+      8000
     )
 
     if (!weatherResponse.ok) {
@@ -95,38 +99,28 @@ export async function run(payload: any): Promise<string> {
       recommendations.push("Thunderstorms possible - consider postponing outdoor activities")
     }
 
-    return `🌤️ WEATHER ANALYSIS REPORT
+    return `🌤️ WEATHER ANALYSIS
 
-📍 Location: ${location}
-📅 Event Date: ${date}
-🎪 Event Type: ${eventType}
+📍 ${location} • ${date} • ${eventType}
 
-🌡️ CURRENT FORECAST:
+${createSectionHeader('Current Forecast')}
 • Temperature: ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
-• Humidity: ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
-• Wind Speed: ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
 • Conditions: ${condition} - ${description}
+• Wind: ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
+• Humidity: ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
 
-📊 WEATHER IMPACT ASSESSMENT:
+${createSectionHeader('Impact Assessment')}
 • Overall Suitability: ${getWeatherSuitability(temperature, humidity, windSpeed, condition)}
 • Risk Level: ${getRiskLevel(condition, windSpeed)}
-• Comfort Index: ${getComfortIndex(temperature, humidity, windSpeed)}/10
+• Comfort Index: ${formatScore(getComfortIndex(temperature, humidity, windSpeed), 10)}
 
-🎯 SPECIFIC RECOMMENDATIONS:
-${recommendations.length > 0 ? recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n') : '• Weather conditions appear favorable for your event'}
+${createSectionHeader('Key Recommendations')}
+${formatList(recommendations, { maxItems: 3, compact: true })}
 
-📈 ADDITIONAL INSIGHTS:
-• Best Time of Day: ${getBestTimeOfDay(temperature, condition)}
-• Equipment Needs: ${getEquipmentNeeds(condition, windSpeed)}
-• Backup Plan: ${getBackupPlan(condition)}
-
-🔍 DATA SOURCES:
-• Primary: OpenWeatherMap API (5-day forecast)
-• Confidence: High (real-time meteorological data)
-• Last Updated: ${new Date().toISOString()}
-
----
-Generated for: ${eventType} in ${location} on ${date}`
+${createSectionHeader('Quick Insights')}
+• Best Time: ${getBestTimeOfDay(temperature, condition)}
+• Equipment: ${getEquipmentNeeds(condition, windSpeed)}
+• Backup: ${getBackupPlan(condition)}`
   } catch (error) {
     console.error('Weather agent error:', error)
     return `Unable to fetch weather data for ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -280,4 +274,70 @@ function getMostCommon(arr: string[]): string {
     counts[item] = (counts[item] || 0) + 1
   })
   return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b)
+}
+
+/**
+ * Generate fallback weather analysis when API is unavailable
+ */
+function generateFallbackWeatherAnalysis(payload: any): string {
+  const { location, date, eventType } = payload
+  
+  // Generate reasonable fallback weather data based on location and season
+  const eventDate = new Date(date)
+  const month = eventDate.getMonth()
+  const isSummer = month >= 5 && month <= 8
+  const isWinter = month >= 11 || month <= 2
+  
+  // Estimate temperature based on season and location
+  let estimatedTemp = 20 // Default moderate temperature
+  if (isSummer) estimatedTemp = 25
+  else if (isWinter) estimatedTemp = 10
+  
+  // Adjust for location (rough estimates)
+  if (location.toLowerCase().includes('new york') || location.toLowerCase().includes('nyc')) {
+    if (isSummer) estimatedTemp = 28
+    else if (isWinter) estimatedTemp = 5
+  } else if (location.toLowerCase().includes('california') || location.toLowerCase().includes('los angeles')) {
+    if (isSummer) estimatedTemp = 30
+    else if (isWinter) estimatedTemp = 18
+  }
+  
+  const estimatedHumidity = isSummer ? 65 : 55
+  const estimatedWindSpeed = 3
+  const estimatedCondition = isSummer ? 'Clear' : 'Partly Cloudy'
+  const estimatedDescription = isSummer ? 'clear sky' : 'partly cloudy'
+  
+  return `🌤️ WEATHER ANALYSIS (ESTIMATED)
+
+📍 ${location} • ${date} • ${eventType}
+
+${createSectionHeader('Estimated Forecast')}
+• Temperature: ${estimatedTemp}°C (${estimatedTemp < 10 ? 'Cold' : estimatedTemp > 30 ? 'Hot' : 'Comfortable'})
+• Conditions: ${estimatedCondition} - ${estimatedDescription}
+• Wind: ${estimatedWindSpeed} m/s (${estimatedWindSpeed > 10 ? 'Strong' : estimatedWindSpeed > 5 ? 'Moderate' : 'Light'})
+• Humidity: ${estimatedHumidity}% (${estimatedHumidity > 80 ? 'High' : estimatedHumidity < 40 ? 'Low' : 'Moderate'})
+
+${createSectionHeader('Impact Assessment')}
+• Overall Suitability: ${getWeatherSuitability(estimatedTemp, estimatedHumidity, estimatedWindSpeed, estimatedCondition)}
+• Risk Level: ${getRiskLevel(estimatedCondition, estimatedWindSpeed)}
+• Comfort Index: ${formatScore(getComfortIndex(estimatedTemp, estimatedHumidity, estimatedWindSpeed), 10)}
+
+${createSectionHeader('Key Recommendations')}
+• Monitor local weather forecasts closer to event date
+• Prepare backup plans for unexpected weather changes
+• Consider seasonal variations and potential changes
+
+${createSectionHeader('Quick Insights')}
+• Best Time: ${getBestTimeOfDay(estimatedTemp, estimatedCondition)}
+• Equipment: ${getEquipmentNeeds(estimatedCondition, estimatedWindSpeed)}
+• Backup: ${getBackupPlan(estimatedCondition)}
+
+⚠️ Note: This is estimated data. Configure WEATHER_API_KEY for real-time forecasts.`
+}
+
+/**
+ * Health check for Weather Agent
+ */
+export async function healthCheck() {
+  return await performAgentHealthCheck('weather')
 }
