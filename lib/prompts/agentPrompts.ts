@@ -237,22 +237,6 @@ export const AGENT_PROMPTS = {
 • Include post-event analysis framework and continuous improvement recommendations for philanthropic effectiveness`
   },
   
-  inputParser: {
-    agentName: 'Input Parser Agent',
-    agentRole: 'a natural language processing specialist and event planning consultant with expertise in data extraction and structuring',
-    analysisType: 'intelligent event detail extraction, natural language understanding, and structured data parsing',
-    responseFormat: `INPUT PARSING RESPONSE FORMAT:
-• Extract all available event details with confidence scores for each field
-• Identify implicit information and make reasonable inferences
-• Handle ambiguous or incomplete information with appropriate fallbacks
-• Provide structured JSON output with all relevant event parameters
-• Include context and assumptions made during parsing
-• Validate extracted information for logical consistency
-• Suggest missing information that would improve analysis quality
-• Handle multiple event types or conflicting information appropriately
-• Provide parsing confidence levels and uncertainty indicators
-• Include recommendations for additional information gathering if needed`
-  }
 }
 
 /**
