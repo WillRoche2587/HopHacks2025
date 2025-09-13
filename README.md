@@ -249,30 +249,6 @@ Ensure all environment variables are set in your production environment:
 - `GEMINI_API_KEY`
 - `MAPS_API_KEY`
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-
-1. Check the documentation
-2. Open an issue on GitHub
-
-## 🔮 Future Enhancements
-
-- [ ] Multi-language support
-- [ ] Advanced ML model integration
-- [ ] Social media sentiment analysis
-- [ ] Venue-specific recommendations
-- [ ] Integration with event management platforms
-- [ ] Mobile app development
-- [ ] Advanced analytics dashboard
