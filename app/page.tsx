@@ -138,18 +138,6 @@ export default function CharityAI() {
           },
           {
             id: '2',
-            title: 'Charity Fundraiser Gala',
-            location: 'Grand Hotel Ballroom',
-            date: '2024-02-20',
-            duration: '6 hours',
-            attendance: 300,
-            budget: 25000,
-            audience: 'Donors and supporters',
-            notes: 'Raised $50,000 for local children\'s hospital',
-            impactScore: 88
-          },
-          {
-            id: '3',
             title: 'Volunteer Cleanup Day',
             location: 'Riverside Park',
             date: '2024-03-10',
@@ -161,19 +149,7 @@ export default function CharityAI() {
             impactScore: 85
           },
           {
-            id: '4',
-            title: 'Holiday Toy Drive',
-            location: 'City Hall Plaza',
-            date: '2024-12-15',
-            duration: '8 hours',
-            attendance: 200,
-            budget: 8000,
-            audience: 'Families and children',
-            notes: 'Collected 1,000+ toys for underprivileged children',
-            impactScore: 95
-          },
-          {
-            id: '5',
+            id: '3',
             title: 'Environmental Awareness Walk',
             location: 'Central Park',
             date: '2024-04-22',
@@ -183,6 +159,42 @@ export default function CharityAI() {
             audience: 'Environmental activists',
             notes: 'Raised awareness about climate change',
             impactScore: 78
+          },
+          {
+            id: '4',
+            title: 'Youth Sports Tournament',
+            location: 'Community Sports Complex',
+            date: '2024-05-18',
+            duration: '6 hours',
+            attendance: 45,
+            budget: 4500,
+            audience: 'Youth and families',
+            notes: 'Lower than expected turnout due to competing events',
+            impactScore: 62
+          },
+          {
+            id: '5',
+            title: 'Senior Center Bingo Night',
+            location: 'Sunset Senior Center',
+            date: '2024-06-12',
+            duration: '3 hours',
+            attendance: 25,
+            budget: 800,
+            audience: 'Senior citizens',
+            notes: 'Poor weather affected attendance significantly',
+            impactScore: 45
+          },
+          {
+            id: '6',
+            title: 'Book Drive for Schools',
+            location: 'Local Library',
+            date: '2024-07-08',
+            duration: '4 hours',
+            attendance: 35,
+            budget: 1200,
+            audience: 'Parents and educators',
+            notes: 'Limited promotion led to minimal participation',
+            impactScore: 38
           }
         ]
         
@@ -334,17 +346,17 @@ export default function CharityAI() {
   }
 
   const getImpactScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 80) return 'text-blue-600'
-    if (score >= 70) return 'text-purple-600'
-    return 'text-yellow-600'
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-yellow-600'
+    if (score >= 40) return 'text-orange-600'
+    return 'text-red-600'
   }
 
   const getImpactScoreBgColor = (score: number) => {
-    if (score >= 90) return 'bg-green-500'
-    if (score >= 80) return 'bg-blue-500'
-    if (score >= 70) return 'bg-purple-500'
-    return 'bg-yellow-500'
+    if (score >= 80) return 'bg-green-500'
+    if (score >= 60) return 'bg-yellow-500'
+    if (score >= 40) return 'bg-orange-500'
+    return 'bg-red-500'
   }
 
   const getOverallScoreColor = (score: number) => {
