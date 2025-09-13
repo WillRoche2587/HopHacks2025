@@ -66,7 +66,7 @@ async function analyzeWithLLM(historicalData: any[], eventDetails: any): Promise
 
   try {
     const prompt = `
-Analyze the following historical event data and provide insights for a new event:
+Summarize historical event insights for (${eventDetails.location} • ${eventDetails.date}). Include: average attendance, trends, seasonal/weather patterns, and relevant benchmarks. Provide 3–4 recommendations for planning based on past performance. Note limitations of data if applicable.
 
 Historical Data:
 ${JSON.stringify(historicalData, null, 2)}
@@ -74,15 +74,14 @@ ${JSON.stringify(historicalData, null, 2)}
 New Event Details:
 ${JSON.stringify(eventDetails, null, 2)}
 
-Please provide:
-1. Attendance prediction based on historical patterns
-2. Key success factors identified
-3. Risk factors to consider
-4. Budget recommendations
-5. Optimal timing insights
-6. Weather impact analysis
+Focus on:
+1. Average attendance patterns and trends
+2. Seasonal and weather pattern impacts
+3. Relevant benchmarks for similar events
+4. 3-4 specific planning recommendations
+5. Data limitations and confidence levels
 
-Format your response as a structured analysis with clear sections.
+Format as structured analysis with clear sections.
 `
 
     // Initialize Gemini AI client

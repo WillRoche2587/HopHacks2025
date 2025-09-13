@@ -347,6 +347,20 @@ export default function CharityAI() {
     return 'bg-yellow-500'
   }
 
+  const getOverallScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-yellow-600'
+    if (score >= 40) return 'text-orange-600'
+    return 'text-red-600'
+  }
+
+  const getOverallScoreBgColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500'
+    if (score >= 60) return 'bg-yellow-500'
+    if (score >= 40) return 'bg-orange-500'
+    return 'bg-red-500'
+  }
+
   return (
     <ErrorBoundary>
       <SidebarProvider>
@@ -595,9 +609,22 @@ export default function CharityAI() {
                         <div className="text-4xl font-bold text-primary-600 mb-2">
                           {analysisResults.overallScore}/100
                         </div>
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground mb-4">
                           Based on comprehensive AI analysis
                         </p>
+                        {/* Score Chart */}
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-muted-foreground">Overall Score</span>
+                          <span className={getOverallScoreColor(analysisResults.overallScore)}>
+                            {analysisResults.overallScore}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full ${getOverallScoreBgColor(analysisResults.overallScore)}`}
+                            style={{ width: `${analysisResults.overallScore}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

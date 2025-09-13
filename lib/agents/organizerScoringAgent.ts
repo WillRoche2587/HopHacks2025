@@ -51,7 +51,7 @@ async function computeReadinessScore(data: any): Promise<string> {
 
   try {
     const prompt = `
-As an expert event planning consultant, analyze the following comprehensive data and provide a structured readiness assessment.
+Deliver a full charitable impact assessment for (${data.eventDetails.location} • ${data.eventDetails.date}). Provide: overall score, breakdown (weather, competition, history, budget, logistics), critical issues, strengths, opportunities, top priority recommendations, risk assessment, success probability, and clear next steps.
 
 EVENT DETAILS:
 ${JSON.stringify(data.eventDetails, null, 2)}
@@ -65,7 +65,7 @@ ${data.currentEvents}
 HISTORICAL ANALYSIS:
 ${data.historical}
 
-Please provide a comprehensive analysis in the following EXACT JSON structure:
+Provide comprehensive analysis in the following EXACT JSON structure:
 
 {
   "overallScore": {

@@ -400,7 +400,7 @@ function generateOptimizedCurrentEventsPrompt(context: any): string {
   const { eventDetails, currentEvents, trafficConditions } = context
   const { eventType, location, date, expectedAttendance } = eventDetails
   
-  return `Analyze competitive landscape for ${eventType} in ${location} on ${date}.
+  return `Provide a current events analysis for event (${location} • ${date}). Cover: competitive threats, traffic impact, and top recommendations. Highlight risk factors (attendance, timing, promotion) and opportunities. Conclude with confidence level based on available data.
 
 EVENT DATA:
 - Type: ${eventType}
@@ -418,14 +418,14 @@ TRAFFIC CONDITIONS:
 - Congestion Factor: ${trafficConditions?.congestionFactor || 'Unknown'}
 - Peak Hours: ${trafficConditions?.peakHours?.join(', ') || 'Unknown'}
 
-Provide concise analysis with:
-1. Key competitive threats (top 3)
-2. Traffic impact assessment
-3. Venue availability concerns
-4. Timing optimization recommendations
-5. Risk mitigation strategies
+Focus on:
+1. Competitive threats and their impact
+2. Traffic and accessibility concerns
+3. Risk factors for attendance, timing, and promotion
+4. Opportunities to leverage
+5. Confidence level in the analysis
 
-Keep response under 500 words.`
+Keep response concise and actionable.`
 }
 
 /**

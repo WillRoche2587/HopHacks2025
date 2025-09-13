@@ -101,7 +101,7 @@ export async function run(payload: any): Promise<string> {
 
     return `🌤️ WEATHER ANALYSIS
 
-📍 ${location} • ${date} • ${eventType}
+📍 ${location} • ${date}
 
 ${createSectionHeader('Current Forecast')}
 • Temperature: ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
