@@ -58,10 +58,10 @@ async function fetchHistoricalData(eventType: string, location: string): Promise
  * Analyze historical data using LLM
  */
 async function analyzeWithLLM(historicalData: any[], eventDetails: any): Promise<string> {
-  const geminiApiKey = process.env.GEMINI_API_KEY2
+  const geminiApiKey = process.env.GEMINI_API_KEY
   
   if (!geminiApiKey) {
-    console.warn('GEMINI_API_KEY2 not configured for Historic Events Agent - using fallback analysis')
+    console.warn('GEMINI_API_KEY not configured for Historic Events Agent - using fallback analysis')
     return generateFallbackHistoricalAnalysis(eventDetails)
   }
 
