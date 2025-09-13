@@ -36,12 +36,14 @@ import {
   AlertCircle,
   RefreshCw,
   Moon,
-  Sun
+  Sun,
+  Download
 } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { generateEventAnalysisPDF } from '@/lib/utils/pdfGenerator'
 
 // Types
 interface EventFormData {
@@ -106,6 +108,7 @@ export default function CharityAI() {
   const [userId, setUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize user session and dark mode
@@ -397,6 +400,20 @@ export default function CharityAI() {
     return 'bg-red-500'
   }
 
+  const handleDownloadPDF = async () => {
+    if (!analysisResults) return
+
+    setIsGeneratingPDF(true)
+    try {
+      await generateEventAnalysisPDF(eventForm, analysisResults)
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      setError('Failed to generate PDF. Please try again.')
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+  }
+
   return (
     <ErrorBoundary>
       <div className={`${isDarkMode ? 'dark' : ''} min-h-screen bg-background`}>
@@ -669,32 +686,75 @@ export default function CharityAI() {
               {/* Analysis Results */}
               {analysisResults && (
                 <div className="space-y-6">
-                  {/* Overall Score */}
-                  <Card className="border-primary-200">
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary-600 mb-2">
-                          {analysisResults.overallScore}/100
+                  {/* Overall Score and PDF Download */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Overall Score Card */}
+                    <Card className="border-primary-200 lg:col-span-2">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-4xl font-bold text-primary-600 mb-2">
+                            {analysisResults.overallScore}/100
+                          </div>
+                          <p className="text-muted-foreground mb-4">
+                            Based on comprehensive AI analysis
+                          </p>
+                          {/* Score Chart */}
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">Overall Score</span>
+                            <span className={getOverallScoreColor(analysisResults.overallScore)}>
+                              {analysisResults.overallScore}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className={`h-3 rounded-full ${getOverallScoreBgColor(analysisResults.overallScore)}`}
+                              style={{ width: `${analysisResults.overallScore}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <p className="text-muted-foreground mb-4">
-                          Based on comprehensive AI analysis
-                        </p>
-                        {/* Score Chart */}
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Overall Score</span>
-                          <span className={getOverallScoreColor(analysisResults.overallScore)}>
-                            {analysisResults.overallScore}%
-                          </span>
+                      </CardContent>
+                    </Card>
+
+                    {/* PDF Download Card */}
+                    <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
+                      <CardContent className="pt-6">
+                        <div className="text-center space-y-4">
+                          <div className="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-purple-900 mb-1">
+                              Download Report
+                            </h3>
+                            <p className="text-sm text-purple-700 mb-4">
+                              Get a comprehensive PDF report with all analysis details
+                            </p>
+                          </div>
+                          <Button
+                            onClick={handleDownloadPDF}
+                            disabled={isGeneratingPDF}
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                          >
+                            {isGeneratingPDF ? (
+                              <>
+                                <div className="loading-dots mr-2" aria-hidden="true">
+                                  <span></span>
+                                  <span></span>
+                                  <span></span>
+                                </div>
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                              </>
+                            )}
+                          </Button>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className={`h-3 rounded-full ${getOverallScoreBgColor(analysisResults.overallScore)}`}
-                            style={{ width: `${analysisResults.overallScore}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
 
                   {/* Agent Results Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
