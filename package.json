@@ -1,0 +1,39 @@
+{
+  "name": "hophacks-project",
+  "version": "1.0.0",
+  "description": "Community Event Impact Predictor with modular AI agents",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "@tailwindcss/forms": "^0.5.10",
+    "@types/node": "^24.3.3",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "autoprefixer": "^10.4.21",
+    "next": "^15.5.3",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
+    "eslint": "^9.35.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6"
+  },
+  "packageManager": "pnpm@10.15.1",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "next lint --fix"
+    ]
+  }
+}
