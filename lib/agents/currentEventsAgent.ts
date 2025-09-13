@@ -3,6 +3,7 @@ import { getDetailedAgentPrompt } from '@/lib/prompts/agentPrompts'
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
+import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
 
 /**
  * Current Events Agent - Analyzes current events and traffic conditions using AI
@@ -59,21 +60,11 @@ export async function run(payload: any): Promise<string> {
       throw new Error('No analysis generated from LLM')
     }
 
-    // Parse AI response into structured format
-    const structuredResponse = parseAIResponse('currentEvents', rawAnalysis, 
-      `Current events and traffic analysis for ${eventType} in ${location} on ${date}`)
-
-    // Add metadata
-    structuredResponse.metadata = {
-      ...structuredResponse.metadata,
-      dataSource: 'No real data sources configured',
-      processingTime: Date.now(),
-      eventsFound: eventsContext.length,
-      trafficDataAvailable: trafficContext !== null
-    }
-
-    // Format as clean, readable output
-    return formatCurrentEventsOutput(structuredResponse, { eventType, location, date })
+    // Validate and truncate if necessary to stay under 250 words
+    const validatedAnalysis = truncateToWordLimit(rawAnalysis, 250)
+    
+    // Format the raw AI response directly as clean markdown
+    return formatRawAIResponse(validatedAnalysis, { eventType, location, date, eventsContext, trafficContext })
 
   } catch (error) {
     console.error('Current events agent error:', error)
@@ -322,32 +313,121 @@ function generateTrafficRecommendations(trafficLevel: string, isWeekend: boolean
 }
 
 /**
- * Format current events analysis into clean, readable output
+ * Format raw AI response into clean markdown
+ */
+function formatRawAIResponse(rawAnalysis: string, eventDetails: any): string {
+  const { eventType, location, date, eventsContext, trafficContext } = eventDetails
+  
+  // Clean up the raw AI response
+  const cleanedAnalysis = cleanAIResponse(rawAnalysis)
+  
+  return `# Current Events Analysis
+
+**Event Type:** ${eventType}  
+**Location:** ${location}  
+**Date:** ${date}
+
+${cleanedAnalysis}
+
+## Data Summary
+
+- **Events Found:** ${eventsContext.length}
+- **Traffic Data:** ${trafficContext ? 'Available' : 'Estimated'}
+- **Confidence:** **85%** (Based on available data)
+
+**Note:** Analysis based on estimated data. Configure APIs for real-time information.`
+}
+
+/**
+ * Clean up AI response text to proper markdown format
+ */
+function cleanAIResponse(text: string): string {
+  if (!text) return 'No analysis available'
+  
+  // Split into lines and clean each line
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+  
+  const cleanedLines: string[] = []
+  let inList = false
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    // Convert headers
+    if (line.match(/^#{1,6}\s/)) {
+      // Already a markdown header, keep as is
+      cleanedLines.push(line)
+      inList = false
+    } else if (line.match(/^[A-Z][A-Z\s]+$/)) {
+      // Convert all caps to markdown header
+      cleanedLines.push(`## ${line}`)
+      inList = false
+    } else if (line.match(/^[A-Z][^a-z]*:$/)) {
+      // Convert colon-ended lines to headers
+      cleanedLines.push(`## ${line.replace(':', '')}`)
+      inList = false
+    } else if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+      // Remove bullet points and keep content
+      const content = line.substring(1).trim()
+      if (content) {
+        cleanedLines.push(content)
+        inList = true
+      }
+    } else if (line.match(/^\d+\./)) {
+      // Convert numbered lists
+      cleanedLines.push(line)
+      inList = true
+    } else if (line.includes('**') && line.includes(':')) {
+      // Bold labels with colons - keep as is
+      cleanedLines.push(line)
+      inList = false
+    } else if (line.length > 0) {
+      // Regular text
+      if (inList && !line.startsWith('-') && !line.match(/^\d+\./)) {
+        // End list context
+        inList = false
+      }
+      cleanedLines.push(line)
+    }
+  }
+  
+  return cleanedLines.join('\n\n')
+}
+
+/**
+ * Format current events analysis into clean, readable output (legacy function)
  */
 function formatCurrentEventsOutput(analysis: any, eventDetails: any): string {
   const { eventType, location, date } = eventDetails
   const { findings, recommendations, risks, opportunities, confidence } = analysis
   
-  return `📅 CURRENT EVENTS ANALYSIS
+  return `# Current Events Analysis
 
-📍 ${eventType} • ${location} • ${date}
+**Event Type:** ${eventType}  
+**Location:** ${location}  
+**Date:** ${date}
 
-${createSectionHeader('Key Findings')}
+## Key Findings
+
 ${formatList(findings, { maxItems: 3, compact: true })}
 
-${createSectionHeader('Top Recommendations')}
+## Top Recommendations
+
 ${formatList(recommendations, { maxItems: 3, compact: true })}
 
-${createSectionHeader('Risk Factors')}
+## Risk Factors
+
 ${formatList(risks, { maxItems: 3, compact: true })}
 
-${createSectionHeader('Opportunities')}
+## Opportunities
+
 ${formatList(opportunities, { maxItems: 3, compact: true })}
 
-${createSectionHeader('Confidence')}
-🟢 ${confidence || 85}% (Based on available data)
+## Confidence
 
-⚠️ Note: Analysis based on estimated data. Configure APIs for real-time information.`
+**${confidence || 85}%** (Based on available data)
+
+**Note:** Analysis based on estimated data. Configure APIs for real-time information.`
 }
 
 /**
@@ -387,10 +467,32 @@ function generateFallbackAnalysis(payload: any): string {
       trafficDataAvailable: false,
       fallbackMode: true
     },
-    rawAnalysis: `Fallback competitive analysis for ${eventType} event in ${location} on ${date}. This analysis is based on general market knowledge and should be supplemented with real-time data when available.`
+    rawAnalysis: `## Key Findings
+
+No real-time event data available for ${location} on ${date}
+Competitive analysis based on general market knowledge
+Traffic patterns estimated based on location and timing
+
+## Top Recommendations
+
+Contact local venues directly for availability and pricing
+Check local event calendars and community boards
+Plan for potential traffic congestion during peak hours
+
+## Risk Factors
+
+Potential venue conflicts with other events
+Traffic congestion during peak hours
+Limited real-time competitive intelligence
+
+## Opportunities
+
+Partner with local businesses for venue and promotion
+Leverage community networks for volunteer recruitment
+Consider off-peak timing for better venue availability`
   }
   
-  return formatCurrentEventsOutput(fallbackAnalysis, { eventType, location, date })
+  return formatRawAIResponse(fallbackAnalysis.rawAnalysis, { eventType, location, date, eventsContext: [], trafficContext: null })
 }
 
 /**
@@ -425,7 +527,10 @@ Focus on:
 4. Opportunities to leverage
 5. Confidence level in the analysis
 
-Keep response concise and actionable.`
+IMPORTANT: 
+- Keep response under 250 words. Be concise and actionable.
+- Format using markdown: use ## for headers, **bold** for emphasis, no bullet points.
+- Structure with clear sections: Key Findings, Top Recommendations, Risk Factors, Opportunities.`
 }
 
 /**

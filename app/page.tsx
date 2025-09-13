@@ -25,7 +25,7 @@ import {
   Heart,
   CheckCircle,
   Calendar,
-  AlertTriangle,
+  FileText,
   TrendingUp,
   Clock,
   Leaf,
@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Types
@@ -483,15 +484,17 @@ export default function CharityAI() {
           {/* Event Analysis Tab */}
           {activeTab === 'analysis' && (
             <div className="space-y-6">
+              {/* Event Details Title */}
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Event Details</h2>
+                <p className="text-muted-foreground">
+                  Provide details about your charitable event for comprehensive AI analysis
+                </p>
+              </div>
+
               {/* Event Details Form */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Event Details</CardTitle>
-                  <CardDescription>
-                    Provide details about your charitable event for comprehensive AI analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <form onSubmit={handleFormSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -652,9 +655,10 @@ export default function CharityAI() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {analysisResults.weatherAnalysis}
-                        </p>
+                        <MarkdownRenderer 
+                          content={analysisResults.weatherAnalysis}
+                          className="text-sm"
+                        />
                       </CardContent>
                     </Card>
 
@@ -667,9 +671,10 @@ export default function CharityAI() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {analysisResults.currentEventsAnalysis}
-                        </p>
+                        <MarkdownRenderer 
+                          content={analysisResults.currentEventsAnalysis}
+                          className="text-sm"
+                        />
                       </CardContent>
                     </Card>
 
@@ -682,9 +687,10 @@ export default function CharityAI() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {analysisResults.historicAnalysis}
-                        </p>
+                        <MarkdownRenderer 
+                          content={analysisResults.historicAnalysis}
+                          className="text-sm"
+                        />
                       </CardContent>
                     </Card>
 
@@ -692,14 +698,15 @@ export default function CharityAI() {
                     <Card>
                       <CardHeader>
                         <div className="flex items-center space-x-2">
-                          <AlertTriangle className="h-5 w-5 text-orange-600" />
+                          <FileText className="h-5 w-5 text-orange-600" />
                           <CardTitle className="text-lg">Comprehensive Recommendations</CardTitle>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {analysisResults.organizerScoring}
-                        </p>
+                        <MarkdownRenderer 
+                          content={analysisResults.organizerScoring}
+                          className="text-sm"
+                        />
                       </CardContent>
                     </Card>
             </div>
@@ -741,7 +748,7 @@ export default function CharityAI() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
-                        <AlertTriangle className="h-5 w-5 text-orange-600" />
+                        <FileText className="h-5 w-5 text-orange-600" />
                         <span>What You'll Get</span>
                       </CardTitle>
                     </CardHeader>
@@ -902,7 +909,16 @@ export default function CharityAI() {
                                   : 'bg-muted text-muted-foreground'
                               }`}
                             >
-                              <p className="text-sm">{message.content}</p>
+                              <div className="text-sm">
+                                {message.role === 'assistant' ? (
+                                  <MarkdownRenderer 
+                                    content={message.content}
+                                    className="text-sm"
+                                  />
+                                ) : (
+                                  <div className="whitespace-pre-wrap">{message.content}</div>
+                                )}
+                              </div>
                               <p className="text-xs opacity-60 mt-1">
                                 {message.timestamp.toLocaleTimeString()}
                               </p>

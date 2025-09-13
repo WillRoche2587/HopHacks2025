@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
+import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
 
 /**
  * Historic Events Agent - Analyzes historical event data and patterns
@@ -57,10 +58,10 @@ async function fetchHistoricalData(eventType: string, location: string): Promise
  * Analyze historical data using LLM
  */
 async function analyzeWithLLM(historicalData: any[], eventDetails: any): Promise<string> {
-  const geminiApiKey = process.env.GEMINI_API_KEY
+  const geminiApiKey = process.env.GEMINI_API_KEY2
   
   if (!geminiApiKey) {
-    console.warn('GEMINI_API_KEY not configured for Historic Events Agent - using fallback analysis')
+    console.warn('GEMINI_API_KEY2 not configured for Historic Events Agent - using fallback analysis')
     return generateFallbackHistoricalAnalysis(eventDetails)
   }
 
@@ -81,7 +82,7 @@ Focus on:
 4. 3-4 specific planning recommendations
 5. Data limitations and confidence levels
 
-Format as structured analysis with clear sections.
+IMPORTANT: Keep response under 250 words. Format as structured analysis with clear sections. Use ## for headers, **bold** for emphasis, no bullet points.
 `
 
     // Initialize Gemini AI client
@@ -99,8 +100,11 @@ Format as structured analysis with clear sections.
       throw new Error('No analysis generated from LLM')
     }
     
+    // Validate and truncate if necessary to stay under 250 words
+    const validatedAnalysis = truncateToWordLimit(analysis, 250)
+    
     // Format as clean, readable output
-    return formatHistoricalEventsOutput(analysis, eventDetails)
+    return formatHistoricalEventsOutput(validatedAnalysis, eventDetails)
   } catch (error) {
     console.error('LLM analysis error:', error)
     
@@ -126,23 +130,28 @@ function formatHistoricalEventsOutput(analysis: string, eventDetails: any): stri
   const lines = analysis.split('\n').filter(line => line.trim())
   const keyInsights = lines.slice(0, 8) // Take first 8 lines as key insights
   
-  return `📊 HISTORICAL ANALYSIS
+  return `# Historical Analysis
 
-📍 ${eventType} • ${location} • ${date}
+**Event Type:** ${eventType}  
+**Location:** ${location}  
+**Date:** ${date}
 
-${createSectionHeader('Key Insights')}
+## Key Insights
+
 ${formatList(keyInsights, { maxItems: 5, compact: true })}
 
-${createSectionHeader('Summary')}
+## Summary
+
 Based on historical patterns and industry data, this analysis provides insights for your upcoming event. Key factors include weather patterns, attendance trends, and operational considerations.
 
-${createSectionHeader('Recommendations')}
-• Review historical weather patterns for your event date
-• Consider attendance trends from similar past events
-• Plan for seasonal variations and potential challenges
-• Leverage successful strategies from previous events
+## Recommendations
 
-⚠️ Note: Analysis based on available historical data. Supplement with local event history when possible.`
+- Review historical weather patterns for your event date
+- Consider attendance trends from similar past events
+- Plan for seasonal variations and potential challenges
+- Leverage successful strategies from previous events
+
+**Note:** Analysis based on available historical data. Supplement with local event history when possible.`
 }
 
 /**
@@ -151,52 +160,61 @@ ${createSectionHeader('Recommendations')}
 function generateFallbackHistoricalAnalysis(eventDetails: any): string {
   const { eventType, location, date, expectedAttendance, budget } = eventDetails
   
-  return `📊 HISTORICAL ANALYSIS
+  return `# Historical Analysis
 
-📍 ${eventType} • ${location} • ${date}
+**Event Type:** ${eventType}  
+**Location:** ${location}  
+**Date:** ${date}
 
-${createSectionHeader('Attendance Prediction')}
-• Expected: ${expectedAttendance ? Math.round(expectedAttendance * 0.7) : 'N/A'} - ${expectedAttendance ? Math.round(expectedAttendance * 0.9) : 'N/A'} attendees
-• Industry average: 60-80% of expected attendance
-• Key factors: weather, competition, marketing, community engagement
+## Attendance Prediction
 
-${createSectionHeader('Key Success Factors')}
-• Strong community engagement and volunteer recruitment
-• Effective marketing and promotion strategy
-• Weather contingency planning
-• Clear event objectives and value proposition
+- **Expected:** ${expectedAttendance ? Math.round(expectedAttendance * 0.7) : 'N/A'} - ${expectedAttendance ? Math.round(expectedAttendance * 0.9) : 'N/A'} attendees
+- **Industry average:** 60-80% of expected attendance
+- **Key factors:** weather, competition, marketing, community engagement
 
-${createSectionHeader('Risk Factors')}
-• Weather-related attendance fluctuations
-• Competing events on similar dates
-• Venue availability and pricing changes
-• Volunteer and vendor coordination challenges
+## Key Success Factors
 
-${createSectionHeader('Budget Recommendations')}
-• Venue & Logistics: 40%
-• Marketing & Promotion: 25%
-• Contingency Planning: 20%
-• Supplies & Materials: 15%
+- Strong community engagement and volunteer recruitment
+- Effective marketing and promotion strategy
+- Weather contingency planning
+- Clear event objectives and value proposition
 
-${createSectionHeader('Timing Insights')}
-• ${date ? new Date(date).toLocaleDateString('en-US', { weekday: 'long' }) : 'Weekend'} events typically see higher attendance
-• Morning events (9-11 AM) often have better weather and attendance
-• Consider local community calendar and school schedules
+## Risk Factors
 
-${createSectionHeader('Weather Impact')}
-• Historical data shows generally favorable conditions
-• Average temperature: 15-25°C (ideal for outdoor events)
-• Precipitation probability: 20-30% (manageable with planning)
-• Wind conditions: typically light to moderate
+- Weather-related attendance fluctuations
+- Competing events on similar dates
+- Venue availability and pricing changes
+- Volunteer and vendor coordination challenges
 
-${createSectionHeader('Top Recommendations')}
-• Research local event history and community preferences
-• Develop weather contingency plans
-• Establish strong volunteer networks
-• Create comprehensive marketing timeline
-• Build relationships with local vendors and venues
+## Budget Recommendations
 
-⚠️ Note: Based on industry standards. Supplement with local historical data when available.`
+Venue & Logistics: 40%
+Marketing & Promotion: 25%
+Contingency Planning: 20%
+Supplies & Materials: 15%
+
+## Timing Insights
+
+${date ? new Date(date).toLocaleDateString('en-US', { weekday: 'long' }) : 'Weekend'} events typically see higher attendance
+Morning events (9-11 AM) often have better weather and attendance
+Consider local community calendar and school schedules
+
+## Weather Impact
+
+Historical data shows generally favorable conditions
+Average temperature: 15-25°C (ideal for outdoor events)
+Precipitation probability: 20-30% (manageable with planning)
+Wind conditions: typically light to moderate
+
+## Top Recommendations
+
+Research local event history and community preferences
+Develop weather contingency plans
+Establish strong volunteer networks
+Create comprehensive marketing timeline
+Build relationships with local vendors and venues
+
+Note: Based on industry standards. Supplement with local historical data when available.`
 }
 
 /**

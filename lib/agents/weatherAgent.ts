@@ -99,28 +99,33 @@ export async function run(payload: any): Promise<string> {
       recommendations.push("Thunderstorms possible - consider postponing outdoor activities")
     }
 
-    return `🌤️ WEATHER ANALYSIS
+    return `# Weather Analysis
 
-📍 ${location} • ${date}
+**Location:** ${location}  
+**Date:** ${date}
 
-${createSectionHeader('Current Forecast')}
-• Temperature: ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
-• Conditions: ${condition} - ${description}
-• Wind: ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
-• Humidity: ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
+## Current Forecast
 
-${createSectionHeader('Impact Assessment')}
-• Overall Suitability: ${getWeatherSuitability(temperature, humidity, windSpeed, condition)}
-• Risk Level: ${getRiskLevel(condition, windSpeed)}
-• Comfort Index: ${formatScore(getComfortIndex(temperature, humidity, windSpeed), 10)}
+**Temperature:** ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
+**Conditions:** ${condition} - ${description}
+**Wind:** ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
+**Humidity:** ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
 
-${createSectionHeader('Key Recommendations')}
+## Impact Assessment
+
+**Overall Suitability:** ${getWeatherSuitability(temperature, humidity, windSpeed, condition)}
+**Risk Level:** ${getRiskLevel(condition, windSpeed)}
+**Comfort Index:** ${formatScore(getComfortIndex(temperature, humidity, windSpeed), 10)}
+
+## Key Recommendations
+
 ${formatList(recommendations, { maxItems: 3, compact: true })}
 
-${createSectionHeader('Quick Insights')}
-• Best Time: ${getBestTimeOfDay(temperature, condition)}
-• Equipment: ${getEquipmentNeeds(condition, windSpeed)}
-• Backup: ${getBackupPlan(condition)}`
+## Quick Insights
+
+**Best Time:** ${getBestTimeOfDay(temperature, condition)}
+**Equipment:** ${getEquipmentNeeds(condition, windSpeed)}
+**Backup:** ${getBackupPlan(condition)}`
   } catch (error) {
     console.error('Weather agent error:', error)
     return `Unable to fetch weather data for ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -307,32 +312,38 @@ function generateFallbackWeatherAnalysis(payload: any): string {
   const estimatedCondition = isSummer ? 'Clear' : 'Partly Cloudy'
   const estimatedDescription = isSummer ? 'clear sky' : 'partly cloudy'
   
-  return `🌤️ WEATHER ANALYSIS (ESTIMATED)
+  return `# Weather Analysis (Estimated)
 
-📍 ${location} • ${date} • ${eventType}
+**Location:** ${location}  
+**Date:** ${date}  
+**Event Type:** ${eventType}
 
-${createSectionHeader('Estimated Forecast')}
-• Temperature: ${estimatedTemp}°C (${estimatedTemp < 10 ? 'Cold' : estimatedTemp > 30 ? 'Hot' : 'Comfortable'})
-• Conditions: ${estimatedCondition} - ${estimatedDescription}
-• Wind: ${estimatedWindSpeed} m/s (${estimatedWindSpeed > 10 ? 'Strong' : estimatedWindSpeed > 5 ? 'Moderate' : 'Light'})
-• Humidity: ${estimatedHumidity}% (${estimatedHumidity > 80 ? 'High' : estimatedHumidity < 40 ? 'Low' : 'Moderate'})
+## Estimated Forecast
 
-${createSectionHeader('Impact Assessment')}
-• Overall Suitability: ${getWeatherSuitability(estimatedTemp, estimatedHumidity, estimatedWindSpeed, estimatedCondition)}
-• Risk Level: ${getRiskLevel(estimatedCondition, estimatedWindSpeed)}
-• Comfort Index: ${formatScore(getComfortIndex(estimatedTemp, estimatedHumidity, estimatedWindSpeed), 10)}
+- **Temperature:** ${estimatedTemp}°C (${estimatedTemp < 10 ? 'Cold' : estimatedTemp > 30 ? 'Hot' : 'Comfortable'})
+- **Conditions:** ${estimatedCondition} - ${estimatedDescription}
+- **Wind:** ${estimatedWindSpeed} m/s (${estimatedWindSpeed > 10 ? 'Strong' : estimatedWindSpeed > 5 ? 'Moderate' : 'Light'})
+- **Humidity:** ${estimatedHumidity}% (${estimatedHumidity > 80 ? 'High' : estimatedHumidity < 40 ? 'Low' : 'Moderate'})
 
-${createSectionHeader('Key Recommendations')}
-• Monitor local weather forecasts closer to event date
-• Prepare backup plans for unexpected weather changes
-• Consider seasonal variations and potential changes
+## Impact Assessment
 
-${createSectionHeader('Quick Insights')}
-• Best Time: ${getBestTimeOfDay(estimatedTemp, estimatedCondition)}
-• Equipment: ${getEquipmentNeeds(estimatedCondition, estimatedWindSpeed)}
-• Backup: ${getBackupPlan(estimatedCondition)}
+- **Overall Suitability:** ${getWeatherSuitability(estimatedTemp, estimatedHumidity, estimatedWindSpeed, estimatedCondition)}
+- **Risk Level:** ${getRiskLevel(estimatedCondition, estimatedWindSpeed)}
+- **Comfort Index:** ${formatScore(getComfortIndex(estimatedTemp, estimatedHumidity, estimatedWindSpeed), 10)}
 
-⚠️ Note: This is estimated data. Configure WEATHER_API_KEY for real-time forecasts.`
+## Key Recommendations
+
+- Monitor local weather forecasts closer to event date
+- Prepare backup plans for unexpected weather changes
+- Consider seasonal variations and potential changes
+
+## Quick Insights
+
+- **Best Time:** ${getBestTimeOfDay(estimatedTemp, estimatedCondition)}
+- **Equipment:** ${getEquipmentNeeds(estimatedCondition, estimatedWindSpeed)}
+- **Backup:** ${getBackupPlan(estimatedCondition)}
+
+**Note:** This is estimated data. Configure WEATHER_API_KEY for real-time forecasts.`
 }
 
 /**

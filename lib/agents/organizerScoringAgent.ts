@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, formatRecommendations, formatRisks, formatSuccessProbability, createSectionHeader, createSummary } from '@/lib/utils/formatOutput'
+import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
 
 /**
  * Organizer Scoring Agent - Aggregates all agent outputs and computes readiness score
@@ -51,21 +52,32 @@ async function computeReadinessScore(data: any): Promise<string> {
 
   try {
     const prompt = `
-Deliver a full charitable impact assessment for (${data.eventDetails.location} • ${data.eventDetails.date}). Provide: overall score, breakdown (weather, competition, history, budget, logistics), critical issues, strengths, opportunities, top priority recommendations, risk assessment, success probability, and clear next steps.
+You are a comprehensive event analysis coordinator. Your role is to synthesize data from multiple specialized agents and provide structured, actionable recommendations for a charitable event.
 
 EVENT DETAILS:
 ${JSON.stringify(data.eventDetails, null, 2)}
 
-WEATHER ANALYSIS:
+AGENT ANALYSIS INPUTS:
+
+WEATHER AGENT ANALYSIS:
 ${data.weather}
 
-CURRENT EVENTS ANALYSIS:
+CURRENT EVENTS AGENT ANALYSIS:
 ${data.currentEvents}
 
-HISTORICAL ANALYSIS:
+HISTORICAL EVENTS AGENT ANALYSIS:
 ${data.historical}
 
-Provide comprehensive analysis in the following EXACT JSON structure:
+TASK: Synthesize the above agent analyses into a comprehensive assessment. Extract key insights from each agent, identify patterns across analyses, and create actionable recommendations that combine insights from all sources.
+
+ANALYSIS REQUIREMENTS:
+1. Extract specific findings from each agent's analysis
+2. Identify cross-cutting themes and patterns
+3. Synthesize recommendations that address multiple factors simultaneously
+4. Prioritize recommendations based on combined impact across all analysis areas
+5. Create a holistic view that goes beyond individual agent outputs
+
+Provide your comprehensive analysis in the following EXACT JSON structure:
 
 {
   "overallScore": {
@@ -78,61 +90,72 @@ Provide comprehensive analysis in the following EXACT JSON structure:
       "logistics": 90
     }
   },
+  "weatherAnalysis": "Synthesized weather insights from weather agent analysis",
+  "currentEventsAnalysis": "Synthesized current events insights from current events agent analysis", 
+  "historicalAnalysis": "Synthesized historical insights from historical events agent analysis",
+  "organizerScoring": "Comprehensive recommendations combining insights from all agents",
   "criticalIssues": [
-    "Issue 1 with specific details",
-    "Issue 2 with specific details"
+    "Cross-cutting issue identified from multiple agent analyses",
+    "Issue 2 with specific details from agent data"
   ],
   "strengths": [
-    "Strength 1 with specific details",
+    "Strength identified from agent analysis",
     "Strength 2 with specific details"
   ],
   "opportunities": [
-    "Opportunity 1 with specific details",
+    "Opportunity identified from agent analysis",
     "Opportunity 2 with specific details"
   ],
   "recommendations": [
     {
-      "category": "Weather",
+      "category": "Weather & Logistics",
       "priority": "High",
-      "action": "Specific actionable recommendation",
+      "action": "Specific actionable recommendation combining weather and logistics insights",
       "timeline": "When to implement",
-      "impact": "Expected impact on success"
+      "impact": "Expected impact on success",
+      "source": "Combined from weather and logistics agent analyses"
     },
     {
-      "category": "Marketing",
-      "priority": "Medium",
-      "action": "Specific actionable recommendation",
+      "category": "Marketing & Competition",
+      "priority": "Medium", 
+      "action": "Specific actionable recommendation combining marketing and competition insights",
       "timeline": "When to implement",
-      "impact": "Expected impact on success"
+      "impact": "Expected impact on success",
+      "source": "Combined from current events and historical agent analyses"
     }
   ],
   "riskAssessment": [
     {
-      "risk": "Risk description",
+      "risk": "Risk identified from agent analysis",
       "probability": "High/Medium/Low",
-      "impact": "High/Medium/Low",
-      "mitigation": "Specific mitigation strategy"
+      "impact": "High/Medium/Low", 
+      "mitigation": "Specific mitigation strategy",
+      "source": "Which agent(s) identified this risk"
     }
   ],
   "successProbability": {
     "percentage": 85,
     "confidence": "High/Medium/Low",
-    "factors": ["Factor 1", "Factor 2", "Factor 3"]
+    "factors": ["Factor from agent analysis", "Factor 2", "Factor 3"]
   },
   "nextSteps": [
-    "Immediate action item 1",
+    "Immediate action item derived from agent analysis",
     "Immediate action item 2",
     "Immediate action item 3"
   ],
-  "summary": "Comprehensive 2-3 sentence summary of the event's readiness and key recommendations"
+  "summary": "Comprehensive 2-3 sentence summary synthesizing insights from all agent analyses"
 }
 
-IMPORTANT: 
+CRITICAL INSTRUCTIONS:
 - Return ONLY the JSON object, no additional text
-- Base all scores and assessments on the provided data
-- Be specific and actionable in all recommendations
-- Consider all three agent analyses in your assessment
-- Ensure all scores are realistic and justified by the data
+- Base ALL content on the provided agent analyses - do not invent data
+- Synthesize insights across agents rather than just listing individual findings
+- Create recommendations that address multiple analysis areas simultaneously
+- Ensure weatherAnalysis, currentEventsAnalysis, historicalAnalysis, and organizerScoring fields contain synthesized content from the respective agent outputs
+- Make recommendations actionable and specific to the event details provided
+- Cross-reference findings between agents to identify patterns and conflicts
+- Prioritize recommendations based on combined impact across all analysis areas
+- IMPORTANT: Keep all text content under 250 words total. Be concise and focused.
 `
 
     // Initialize Gemini AI client
@@ -157,7 +180,10 @@ IMPORTANT:
       const structuredData = JSON.parse(jsonString)
       
       // Format the structured data into a comprehensive report
-      return formatStructuredAnalysis(structuredData, data.eventDetails)
+      const report = formatStructuredAnalysis(structuredData, data.eventDetails)
+      
+      // Validate and truncate if necessary to stay under 250 words
+      return truncateToWordLimit(report, 250)
     } catch (parseError) {
       console.error('Error parsing structured response:', parseError)
       // Fallback to raw analysis if JSON parsing fails
@@ -180,47 +206,120 @@ IMPORTANT:
  * Format structured analysis data into a comprehensive report
  */
 function formatStructuredAnalysis(data: any, eventDetails: any): string {
-  const { overallScore, criticalIssues, strengths, opportunities, recommendations, riskAssessment, successProbability, nextSteps, summary } = data
+  const { overallScore, weatherAnalysis, currentEventsAnalysis, historicalAnalysis, organizerScoring, criticalIssues, strengths, opportunities, recommendations, riskAssessment, successProbability, nextSteps, summary } = data
   
-  return `🎯 EVENT READINESS ASSESSMENT
+  return `# Comprehensive Recommendations
 
-📍 ${eventDetails.eventType} • ${eventDetails.location} • ${eventDetails.date}
+Event Type: ${eventDetails.eventType || 'Not specified'}
+Date: ${eventDetails.date || 'Not specified'}
+Location: ${eventDetails.location || 'Not specified'}
+Duration: ${eventDetails.duration || 'Not specified'}
+Expected Attendance: ${eventDetails.expectedAttendance || 'Not specified'}
+Budget: $${eventDetails.budget?.toLocaleString() || 'Not specified'}
+Target Audience: ${eventDetails.audience || 'Not specified'}
 
-${createSectionHeader('Overall Score')}
-🟢 ${overallScore?.total || 'N/A'}/100
+## Weather Analysis
+${formatAnalysisSection(weatherAnalysis || 'Weather data not available', 'weather')}
 
-${overallScore?.breakdown ? `
-${createSectionHeader('Score Breakdown')}
-• Weather: ${overallScore.breakdown.weather}/100
-• Competition: ${overallScore.breakdown.competition}/100
-• Historical: ${overallScore.breakdown.historical}/100
-• Budget: ${overallScore.breakdown.budget}/100
-• Logistics: ${overallScore.breakdown.logistics}/100
-` : ''}
+## Current Events Analysis
+${formatAnalysisSection(currentEventsAnalysis || 'Current events data not available', 'events')}
 
-${createSectionHeader('Critical Issues')}
-${formatList(criticalIssues, { maxItems: 3, compact: true })}
+## Historical Trends Analysis
+${formatAnalysisSection(historicalAnalysis || 'Historical data not available', 'historical')}
 
-${createSectionHeader('Key Strengths')}
-${formatList(strengths, { maxItems: 3, compact: true })}
+## Key Findings
 
-${createSectionHeader('Top Opportunities')}
-${formatList(opportunities, { maxItems: 3, compact: true })}
+### Critical Issues
+${formatListWithMarkers(criticalIssues, '')}
 
-${createSectionHeader('Priority Recommendations')}
-${formatRecommendations(recommendations, { maxItems: 3, compact: true })}
+### Strengths & Opportunities
+${formatListWithMarkers(strengths, '')}
+${formatListWithMarkers(opportunities, '')}
 
-${createSectionHeader('Risk Assessment')}
-${formatRisks(riskAssessment, { maxItems: 3, compact: true })}
+## Action Items
+${formatActionItems(recommendations)}
 
-${createSectionHeader('Success Probability')}
-${formatSuccessProbability(successProbability?.percentage || 0, successProbability?.confidence || 'Unknown')}
+## Risk Assessment
+${formatRiskAssessment(riskAssessment)}
 
-${createSectionHeader('Next Steps')}
-${formatList(nextSteps, { maxItems: 3, compact: true })}
+## Summary & Next Steps
+${formatSummaryAndNextSteps(summary, nextSteps, overallScore?.total)}`
+}
 
-${createSectionHeader('Summary')}
-${summary || 'Analysis completed successfully'}`
+/**
+ * Format analysis section with key findings and markers
+ */
+function formatAnalysisSection(content: string, sectionType: string): string {
+  if (!content || content === 'No data available') {
+    return `No ${sectionType} data available for analysis`
+  }
+  
+  // Extract key points and format without bullet points
+  const lines = content.split('\n').filter(line => line.trim())
+  const formattedLines = lines.map(line => {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+      // Remove bullet points and keep content
+      return trimmed.substring(1).trim()
+    }
+    return trimmed
+  })
+  
+  return formattedLines.slice(0, 5).join('\n') // Limit to 5 key points
+}
+
+/**
+ * Format list with risk/opportunity markers
+ */
+function formatListWithMarkers(items: string[], marker: string): string {
+  if (!items || items.length === 0) {
+    return `No items identified`
+  }
+  
+  return items.slice(0, 3).join('\n')
+}
+
+/**
+ * Format action items from recommendations
+ */
+function formatActionItems(recommendations: any[]): string {
+  if (!recommendations || recommendations.length === 0) {
+    return `No specific action items identified`
+  }
+  
+  return recommendations.slice(0, 5).map(rec => {
+    const priority = rec.priority === 'High' ? '**HIGH**' : rec.priority === 'Medium' ? '**MEDIUM**' : '**LOW**'
+    const source = rec.source ? ` *[${rec.source}]*` : ''
+    return `${priority} **${rec.category}:** ${rec.action} (${rec.timeline})${source}`
+  }).join('\n')
+}
+
+/**
+ * Format risk assessment
+ */
+function formatRiskAssessment(risks: any[]): string {
+  if (!risks || risks.length === 0) {
+    return `No significant risks identified`
+  }
+  
+  return risks.slice(0, 3).map(risk => {
+    const severity = risk.impact === 'High' ? '**HIGH**' : risk.impact === 'Medium' ? '**MEDIUM**' : '**LOW**'
+    const source = risk.source ? ` *[${risk.source}]*` : ''
+    return `${severity} **${risk.risk}** (${risk.probability} probability) - ${risk.mitigation}${source}`
+  }).join('\n')
+}
+
+/**
+ * Format summary and next steps
+ */
+function formatSummaryAndNextSteps(summary: string, nextSteps: string[], score: number): string {
+  const scoreText = score ? `**Overall Readiness Score: ${score}/100**\n\n` : ''
+  const summaryText = summary ? `${summary}\n\n` : ''
+  const stepsText = nextSteps && nextSteps.length > 0 
+    ? `**Immediate Next Steps:**\n${nextSteps.slice(0, 3).join('\n')}`
+    : 'Review analysis and develop action plan'
+  
+  return `${scoreText}${summaryText}${stepsText}`
 }
 
 
@@ -256,6 +355,10 @@ function generateFallbackScoring(data: any): string {
         logistics: 75
       }
     },
+    weatherAnalysis: 'Weather data not available - manual verification recommended for event date',
+    currentEventsAnalysis: 'Current events data not available - research local event calendar for conflicts',
+    historicalAnalysis: 'Historical data not available - review past similar events for insights',
+    organizerScoring: 'Comprehensive analysis limited due to data availability - manual verification required',
     criticalIssues: [
       'Limited real-time data available for comprehensive analysis',
       'Manual verification required for venue availability and pricing',
