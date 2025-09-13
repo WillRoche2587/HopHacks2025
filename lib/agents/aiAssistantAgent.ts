@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function run(payload: { message: string; conversationHistory?: any[] }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     
     const prompt = `You are CharityAI Assistant, a helpful AI assistant specialized in charitable event planning, volunteer management, fundraising strategies, and community engagement.
 

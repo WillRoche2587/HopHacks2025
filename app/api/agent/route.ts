@@ -57,7 +57,9 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    // Store result in database if eventId and userId are provided and supabase is available
+    // Database implementation paused - skip storing results for now
+    // TODO: Re-enable database storage when ready
+    /*
     if (eventId && userId && supabaseAdmin) {
       try {
         const { error } = await supabaseAdmin
@@ -65,8 +67,7 @@ export async function POST(request: NextRequest) {
           .insert({
             event_id: eventId,
             agent_name: agent,
-            response_text: result,
-            user_id: userId
+            response_text: result
           })
 
         if (error) {
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         // Don't fail the request if database operation fails
       }
     }
+    */
 
     return NextResponse.json({
       success: true,
