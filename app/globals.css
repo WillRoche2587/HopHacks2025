@@ -204,4 +204,46 @@
     white-space: nowrap;
     border: 0;
   }
+
+  /* Markdown rendering styles */
+  .prose {
+    @apply text-muted-foreground;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply text-foreground font-semibold;
+  }
+
+  .prose strong {
+    @apply text-foreground font-semibold;
+  }
+
+  .prose code {
+    @apply bg-muted text-foreground;
+  }
+
+  .prose pre {
+    @apply bg-muted border border-border rounded-md;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-muted-foreground/20 bg-muted/30;
+  }
+
+  .prose table {
+    @apply border border-border rounded-md overflow-hidden;
+  }
+
+  .prose th {
+    @apply bg-muted/50 text-foreground font-semibold;
+  }
+
+  .prose td {
+    @apply border-t border-border;
+  }
 }
