@@ -1,14 +1,14 @@
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, formatRecommendations, formatRisks, formatSuccessProbability, createSectionHeader, createSummary } from '@/lib/utils/formatOutput'
-import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
+import { validateWordLimit, truncateToWordLimit, countWords } from '@/lib/utils/wordCount'
 
 /**
  * Organizer Scoring Agent - Aggregates all agent outputs and computes readiness score
  * @param payload - Contains all agent results and event details
  * @returns Comprehensive readiness score and recommendations
  */
-export async function run(payload: any): Promise<string> {
+export async function run(payload: any): Promise<any> {
   const { 
     weatherAnalysis, 
     currentEventsAnalysis, 
@@ -21,11 +21,11 @@ export async function run(payload: any): Promise<string> {
   }
 
   try {
-    // Aggregate all analyses
+    // Aggregate all analyses (now JSON objects)
     const aggregatedData = {
-      weather: weatherAnalysis || 'No weather data available',
-      currentEvents: currentEventsAnalysis || 'No current events data available',
-      historical: historicAnalysis || 'No historical data available',
+      weather: weatherAnalysis || { error: 'No weather data available' },
+      currentEvents: currentEventsAnalysis || { error: 'No current events data available' },
+      historical: historicAnalysis || { error: 'No historical data available' },
       eventDetails
     }
 
@@ -35,14 +35,23 @@ export async function run(payload: any): Promise<string> {
     return scoreAnalysis
   } catch (error) {
     console.error('Organizer scoring agent error:', error)
-    return `Unable to compute readiness score. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    return {
+      eventDetails,
+      error: `Unable to compute readiness score. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      metadata: {
+        dataSource: 'Error Fallback',
+        timestamp: new Date().toISOString(),
+        confidence: 0,
+        fallbackMode: true
+      }
+    }
   }
 }
 
 /**
  * Compute readiness score using LLM analysis
  */
-async function computeReadinessScore(data: any): Promise<string> {
+async function computeReadinessScore(data: any): Promise<any> {
   const geminiApiKey = process.env.GEMINI_API_KEY
   
   if (!geminiApiKey) {
@@ -60,13 +69,13 @@ ${JSON.stringify(data.eventDetails, null, 2)}
 AGENT ANALYSIS INPUTS:
 
 WEATHER AGENT ANALYSIS:
-${data.weather}
+${JSON.stringify(data.weather, null, 2)}
 
 CURRENT EVENTS AGENT ANALYSIS:
-${data.currentEvents}
+${JSON.stringify(data.currentEvents, null, 2)}
 
 HISTORICAL EVENTS AGENT ANALYSIS:
-${data.historical}
+${JSON.stringify(data.historical, null, 2)}
 
 TASK: Synthesize the above agent analyses into a comprehensive assessment. Extract key insights from each agent, identify patterns across analyses, and create actionable recommendations that combine insights from all sources.
 
@@ -117,7 +126,7 @@ Provide your comprehensive analysis in the following EXACT JSON structure:
     },
     {
       "category": "Marketing & Competition",
-      "priority": "Medium", 
+      "priority": "Medium",
       "action": "Specific actionable recommendation combining marketing and competition insights",
       "timeline": "When to implement",
       "impact": "Expected impact on success",
@@ -128,7 +137,7 @@ Provide your comprehensive analysis in the following EXACT JSON structure:
     {
       "risk": "Risk identified from agent analysis",
       "probability": "High/Medium/Low",
-      "impact": "High/Medium/Low", 
+      "impact": "High/Medium/Low",
       "mitigation": "Specific mitigation strategy",
       "source": "Which agent(s) identified this risk"
     }
@@ -155,7 +164,7 @@ CRITICAL INSTRUCTIONS:
 - Make recommendations actionable and specific to the event details provided
 - Cross-reference findings between agents to identify patterns and conflicts
 - Prioritize recommendations based on combined impact across all analysis areas
-- IMPORTANT: Keep all text content under 250 words total. Be concise and focused.
+- IMPORTANT: Keep all text content under 150 words total. Be concise and focused.
 `
 
     // Initialize Gemini AI client
@@ -179,15 +188,44 @@ CRITICAL INSTRUCTIONS:
       const jsonString = jsonMatch ? jsonMatch[0] : rawAnalysis
       const structuredData = JSON.parse(jsonString)
       
-      // Format the structured data into a comprehensive report
-      const report = formatStructuredAnalysis(structuredData, data.eventDetails)
-      
-      // Validate and truncate if necessary to stay under 250 words
-      return truncateToWordLimit(report, 250)
+      // Return structured JSON data with formatted analysis
+      return {
+        eventDetails: data.eventDetails,
+        overallScore: structuredData.overallScore,
+        weatherAnalysis: structuredData.weatherAnalysis,
+        currentEventsAnalysis: structuredData.currentEventsAnalysis,
+        historicalAnalysis: structuredData.historicalAnalysis,
+        organizerScoring: structuredData.organizerScoring,
+        criticalIssues: structuredData.criticalIssues || [],
+        strengths: structuredData.strengths || [],
+        opportunities: structuredData.opportunities || [],
+        recommendations: structuredData.recommendations || [],
+        riskAssessment: structuredData.riskAssessment || [],
+        successProbability: structuredData.successProbability,
+        nextSteps: structuredData.nextSteps || [],
+        summary: structuredData.summary,
+        formattedAnalysis: formatStructuredAnalysis(structuredData, data.eventDetails),
+        metadata: {
+          dataSource: 'AI Analysis + Agent Synthesis',
+          timestamp: new Date().toISOString(),
+          confidence: 90,
+          wordCount: countWords(formatStructuredAnalysis(structuredData, data.eventDetails))
+        }
+      }
     } catch (parseError) {
       console.error('Error parsing structured response:', parseError)
       // Fallback to raw analysis if JSON parsing fails
-      return rawAnalysis
+      return {
+        eventDetails: data.eventDetails,
+        error: 'Failed to parse structured response',
+        rawAnalysis: rawAnalysis,
+        metadata: {
+          dataSource: 'Raw AI Analysis',
+          timestamp: new Date().toISOString(),
+          confidence: 70,
+          fallbackMode: true
+        }
+      }
     }
   } catch (error) {
     console.error('LLM scoring error:', error)
@@ -208,26 +246,7 @@ CRITICAL INSTRUCTIONS:
 function formatStructuredAnalysis(data: any, eventDetails: any): string {
   const { overallScore, weatherAnalysis, currentEventsAnalysis, historicalAnalysis, organizerScoring, criticalIssues, strengths, opportunities, recommendations, riskAssessment, successProbability, nextSteps, summary } = data
   
-  return `# Comprehensive Recommendations
-
-Event Type: ${eventDetails.eventType || 'Not specified'}
-Date: ${eventDetails.date || 'Not specified'}
-Location: ${eventDetails.location || 'Not specified'}
-Duration: ${eventDetails.duration || 'Not specified'}
-Expected Attendance: ${eventDetails.expectedAttendance || 'Not specified'}
-Budget: $${eventDetails.budget?.toLocaleString() || 'Not specified'}
-Target Audience: ${eventDetails.audience || 'Not specified'}
-
-## Weather Analysis
-${formatAnalysisSection(weatherAnalysis || 'Weather data not available', 'weather')}
-
-## Current Events Analysis
-${formatAnalysisSection(currentEventsAnalysis || 'Current events data not available', 'events')}
-
-## Historical Trends Analysis
-${formatAnalysisSection(historicalAnalysis || 'Historical data not available', 'historical')}
-
-## Key Findings
+  return `## Key Findings
 
 ### Critical Issues
 ${formatListWithMarkers(criticalIssues, '')}
@@ -327,7 +346,7 @@ function formatSummaryAndNextSteps(summary: string, nextSteps: string[], score: 
 /**
  * Generate fallback scoring when API is unavailable
  */
-function generateFallbackScoring(data: any): string {
+function generateFallbackScoring(data: any): any {
   const eventDetails = data.eventDetails || {}
   const { eventType, location, date, expectedAttendance, budget } = eventDetails
   
@@ -361,18 +380,15 @@ function generateFallbackScoring(data: any): string {
     organizerScoring: 'Comprehensive analysis limited due to data availability - manual verification required',
     criticalIssues: [
       'Limited real-time data available for comprehensive analysis',
-      'Manual verification required for venue availability and pricing',
-      'Competitive landscape assessment needs local research'
+      'Manual verification required for venue availability and pricing'
     ],
     strengths: [
       'Event planning framework is in place',
-      'Basic event parameters are defined',
-      'Location and timing are specified'
+      'Basic event parameters are defined'
     ],
     opportunities: [
       'Leverage local community networks for support',
-      'Consider partnerships with local businesses',
-      'Explore alternative venues and dates for optimization'
+      'Consider partnerships with local businesses'
     ],
     recommendations: [
       {
@@ -381,13 +397,6 @@ function generateFallbackScoring(data: any): string {
         action: 'Gather real-time venue availability and pricing information',
         timeline: 'Within 1 week',
         impact: 'Critical for accurate planning and budgeting'
-      },
-      {
-        category: 'Competitive Analysis',
-        priority: 'Medium',
-        action: 'Research local event calendar and competing events',
-        timeline: 'Within 2 weeks',
-        impact: 'Helps optimize timing and positioning'
       },
       {
         category: 'Risk Management',
@@ -403,12 +412,6 @@ function generateFallbackScoring(data: any): string {
         probability: 'High',
         impact: 'Medium',
         mitigation: 'Conduct manual research and verification of key factors'
-      },
-      {
-        risk: 'Potential venue conflicts or availability issues',
-        probability: 'Medium',
-        impact: 'High',
-        mitigation: 'Contact venues directly and have backup options ready'
       }
     ],
     successProbability: {
@@ -419,14 +422,35 @@ function generateFallbackScoring(data: any): string {
     nextSteps: [
       'Verify venue availability and pricing',
       'Research local event calendar for conflicts',
-      'Develop detailed contingency plans',
-      'Establish vendor relationships and contracts',
-      'Create detailed timeline and task assignments'
+      'Develop detailed contingency plans'
     ],
     summary: `Event readiness assessment shows ${adjustedScore}% preparedness based on available information. While basic planning elements are in place, additional data collection and verification are needed for optimal event success.`
   }
   
-  return formatStructuredAnalysis(fallbackData, eventDetails)
+  return {
+    eventDetails,
+    overallScore: fallbackData.overallScore,
+    weatherAnalysis: fallbackData.weatherAnalysis,
+    currentEventsAnalysis: fallbackData.currentEventsAnalysis,
+    historicalAnalysis: fallbackData.historicalAnalysis,
+    organizerScoring: fallbackData.organizerScoring,
+    criticalIssues: fallbackData.criticalIssues,
+    strengths: fallbackData.strengths,
+    opportunities: fallbackData.opportunities,
+    recommendations: fallbackData.recommendations,
+    riskAssessment: fallbackData.riskAssessment,
+    successProbability: fallbackData.successProbability,
+    nextSteps: fallbackData.nextSteps,
+    summary: fallbackData.summary,
+    formattedAnalysis: formatStructuredAnalysis(fallbackData, eventDetails),
+    metadata: {
+      dataSource: 'Fallback Analysis',
+      timestamp: new Date().toISOString(),
+      confidence: 60,
+      wordCount: countWords(formatStructuredAnalysis(fallbackData, eventDetails)),
+      fallbackMode: true
+    }
+  }
 }
 
 /**

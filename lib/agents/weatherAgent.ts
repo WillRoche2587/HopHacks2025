@@ -1,12 +1,13 @@
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, formatScore, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
+import { truncateToWordLimit } from '@/lib/utils/wordCount'
 
 /**
  * Weather Agent - Fetches weather data for event planning using OpenWeatherMap API
  * @param payload - Contains location, date, and event details
  * @returns Weather analysis and recommendations
  */
-export async function run(payload: any): Promise<string> {
+export async function run(payload: any): Promise<any> {
   const { location, date, eventType } = payload
 
   if (!location || !date) {
@@ -77,58 +78,95 @@ export async function run(payload: any): Promise<string> {
     // Generate recommendations based on weather
     let recommendations = []
     
+    // Temperature-based recommendations
     if (temperature < 10) {
       recommendations.push("Consider indoor venue or provide heating")
     } else if (temperature > 30) {
       recommendations.push("Ensure adequate shade and hydration stations")
+    } else if (temperature >= 10 && temperature <= 30) {
+      recommendations.push("Temperature is ideal for outdoor events")
     }
 
+    // Humidity-based recommendations
     if (humidity > 80) {
       recommendations.push("High humidity expected - consider ventilation")
+    } else if (humidity < 40) {
+      recommendations.push("Low humidity - ensure hydration stations are available")
+    } else {
+      recommendations.push("Humidity levels are comfortable for outdoor activities")
     }
 
+    // Wind-based recommendations
     if (windSpeed > 10) {
       recommendations.push("High winds expected - secure outdoor equipment and decorations")
+    } else if (windSpeed > 5) {
+      recommendations.push("Moderate winds - secure lightweight items and decorations")
+    } else {
+      recommendations.push("Light winds - minimal impact on outdoor setup")
     }
 
+    // Weather condition recommendations
     if (condition.toLowerCase().includes('rain')) {
       recommendations.push("Rain expected - prepare backup indoor plan")
     } else if (condition.toLowerCase().includes('snow')) {
       recommendations.push("Snow expected - ensure safe pathways and parking")
     } else if (condition.toLowerCase().includes('thunderstorm')) {
       recommendations.push("Thunderstorms possible - consider postponing outdoor activities")
+    } else if (condition.toLowerCase().includes('clear') || condition.toLowerCase().includes('sunny')) {
+      recommendations.push("Clear skies expected - ideal conditions for outdoor events")
+    } else if (condition.toLowerCase().includes('cloudy') || condition.toLowerCase().includes('partly')) {
+      recommendations.push("Cloudy conditions - good for outdoor events with some shade")
     }
 
-    return `# Weather Analysis
+    // Always ensure we have at least 2 recommendations
+    if (recommendations.length < 2) {
+      recommendations.push("Monitor weather forecasts closer to event date")
+      recommendations.push("Have contingency plans ready for unexpected weather changes")
+    }
 
-**Location:** ${location}  
-**Date:** ${date}
+    // Format the analysis as clean markdown
+    const analysis = `Location: ${location}
+Date: ${date}
 
 ## Current Forecast
 
-**Temperature:** ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
-**Conditions:** ${condition} - ${description}
-**Wind:** ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
-**Humidity:** ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
+Temperature: ${temperature.toFixed(1)}°C (${temperature < 10 ? 'Cold' : temperature > 30 ? 'Hot' : 'Comfortable'})
+Conditions: ${condition} - ${description}
+Wind: ${windSpeed} m/s (${windSpeed > 10 ? 'Strong' : windSpeed > 5 ? 'Moderate' : 'Light'})
+Humidity: ${humidity}% (${humidity > 80 ? 'High' : humidity < 40 ? 'Low' : 'Moderate'})
 
 ## Impact Assessment
 
-**Overall Suitability:** ${getWeatherSuitability(temperature, humidity, windSpeed, condition)}
-**Risk Level:** ${getRiskLevel(condition, windSpeed)}
-**Comfort Index:** ${formatScore(getComfortIndex(temperature, humidity, windSpeed), 10)}
+Overall Suitability: ${getWeatherSuitability(temperature, humidity, windSpeed, condition)}
+Risk Level: ${getRiskLevel(condition, windSpeed)}
 
 ## Key Recommendations
 
-${formatList(recommendations, { maxItems: 3, compact: true })}
+${recommendations.slice(0, 2).join('\n')}`
 
-## Quick Insights
-
-**Best Time:** ${getBestTimeOfDay(temperature, condition)}
-**Equipment:** ${getEquipmentNeeds(condition, windSpeed)}
-**Backup:** ${getBackupPlan(condition)}`
+    return {
+      location,
+      date,
+      analysis: truncateToWordLimit(analysis, 250),
+      metadata: {
+        dataSource: 'OpenWeatherMap API',
+        timestamp: new Date().toISOString(),
+        confidence: 95
+      }
+    }
   } catch (error) {
     console.error('Weather agent error:', error)
-    return `Unable to fetch weather data for ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    return {
+      location,
+      date,
+      error: `Unable to fetch weather data for ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      fallback: true,
+      metadata: {
+        dataSource: 'Fallback Analysis',
+        timestamp: new Date().toISOString(),
+        confidence: 60
+      }
+    }
   }
 }
 
@@ -312,38 +350,31 @@ function generateFallbackWeatherAnalysis(payload: any): string {
   const estimatedCondition = isSummer ? 'Clear' : 'Partly Cloudy'
   const estimatedDescription = isSummer ? 'clear sky' : 'partly cloudy'
   
-  return `# Weather Analysis (Estimated)
-
-**Location:** ${location}  
-**Date:** ${date}  
-**Event Type:** ${eventType}
+  return `Location: ${location}  
+Date: ${date}  
+Event Type: ${eventType}
 
 ## Estimated Forecast
 
-- **Temperature:** ${estimatedTemp}°C (${estimatedTemp < 10 ? 'Cold' : estimatedTemp > 30 ? 'Hot' : 'Comfortable'})
-- **Conditions:** ${estimatedCondition} - ${estimatedDescription}
-- **Wind:** ${estimatedWindSpeed} m/s (${estimatedWindSpeed > 10 ? 'Strong' : estimatedWindSpeed > 5 ? 'Moderate' : 'Light'})
-- **Humidity:** ${estimatedHumidity}% (${estimatedHumidity > 80 ? 'High' : estimatedHumidity < 40 ? 'Low' : 'Moderate'})
+Temperature: ${estimatedTemp}°C (${estimatedTemp < 10 ? 'Cold' : estimatedTemp > 30 ? 'Hot' : 'Comfortable'})
+Conditions: ${estimatedCondition} - ${estimatedDescription}
+Wind: ${estimatedWindSpeed} m/s (${estimatedWindSpeed > 10 ? 'Strong' : estimatedWindSpeed > 5 ? 'Moderate' : 'Light'})
+Humidity: ${estimatedHumidity}% (${estimatedHumidity > 80 ? 'High' : estimatedHumidity < 40 ? 'Low' : 'Moderate'})
 
 ## Impact Assessment
 
-- **Overall Suitability:** ${getWeatherSuitability(estimatedTemp, estimatedHumidity, estimatedWindSpeed, estimatedCondition)}
-- **Risk Level:** ${getRiskLevel(estimatedCondition, estimatedWindSpeed)}
-- **Comfort Index:** ${formatScore(getComfortIndex(estimatedTemp, estimatedHumidity, estimatedWindSpeed), 10)}
+Overall Suitability: ${getWeatherSuitability(estimatedTemp, estimatedHumidity, estimatedWindSpeed, estimatedCondition)}
+Risk Level: ${getRiskLevel(estimatedCondition, estimatedWindSpeed)}
 
 ## Key Recommendations
 
-- Monitor local weather forecasts closer to event date
-- Prepare backup plans for unexpected weather changes
-- Consider seasonal variations and potential changes
+Monitor local weather forecasts closer to event date
+Prepare backup plans for unexpected weather changes
+Consider indoor venue options for weather contingency
+Plan for temperature-appropriate clothing and equipment
+Establish communication plan for weather-related updates
 
-## Quick Insights
-
-- **Best Time:** ${getBestTimeOfDay(estimatedTemp, estimatedCondition)}
-- **Equipment:** ${getEquipmentNeeds(estimatedCondition, estimatedWindSpeed)}
-- **Backup:** ${getBackupPlan(estimatedCondition)}
-
-**Note:** This is estimated data. Configure WEATHER_API_KEY for real-time forecasts.`
+Note: This is estimated data. Configure WEATHER_API_KEY for real-time forecasts.`
 }
 
 /**

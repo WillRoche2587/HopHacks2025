@@ -1,14 +1,14 @@
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
-import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
+import { validateWordLimit, truncateToWordLimit, countWords } from '@/lib/utils/wordCount'
 
 /**
  * Historic Events Agent - Analyzes historical event data and patterns
  * @param payload - Contains event details and historical data
  * @returns Historical analysis and pattern recognition
  */
-export async function run(payload: any): Promise<string> {
+export async function run(payload: any): Promise<any> {
   const { eventType, location, date, expectedAttendance, budget } = payload
 
   if (!eventType || !location) {
@@ -20,7 +20,7 @@ export async function run(payload: any): Promise<string> {
     const historicalData = await fetchHistoricalData(eventType, location)
     
     // Analyze patterns using LLM
-    const analysis = await analyzeWithLLM(historicalData, {
+    const analysisResult = await analyzeWithLLM(historicalData, {
       eventType,
       location,
       date,
@@ -28,10 +28,49 @@ export async function run(payload: any): Promise<string> {
       budget
     })
 
-    return analysis
+    // If analyzeWithLLM returns a JSON object, use it directly
+    if (typeof analysisResult === 'object' && analysisResult !== null) {
+      return analysisResult
+    }
+
+    // If analyzeWithLLM returns a string, wrap it in our JSON structure
+    return {
+      eventType,
+      location,
+      date,
+      analysis: analysisResult,
+      historicalData: {
+        eventsAnalyzed: historicalData.length,
+        dataRange: historicalData.length > 0 ? {
+          earliest: historicalData[historicalData.length - 1]?.date,
+          latest: historicalData[0]?.date
+        } : null,
+        averageAttendance: historicalData.length > 0 ? 
+          Math.round(historicalData.reduce((sum, event) => sum + event.actualAttendance, 0) / historicalData.length) : 0,
+        averageBudget: historicalData.length > 0 ? 
+          Math.round(historicalData.reduce((sum, event) => sum + event.budget, 0) / historicalData.length) : 0
+      },
+      metadata: {
+        dataSource: 'AI Analysis + Historical Data',
+        timestamp: new Date().toISOString(),
+        confidence: 80,
+        wordCount: countWords(analysisResult)
+      }
+    }
   } catch (error) {
     console.error('Historic events agent error:', error)
-    return `Unable to analyze historical data for ${eventType} in ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    return {
+      eventType,
+      location,
+      date,
+      error: `Unable to analyze historical data for ${eventType} in ${location}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      metadata: {
+        dataSource: 'Error Fallback',
+        timestamp: new Date().toISOString(),
+        confidence: 0,
+        fallbackMode: true
+      }
+    }
   }
 }
 
@@ -57,7 +96,7 @@ async function fetchHistoricalData(eventType: string, location: string): Promise
 /**
  * Analyze historical data using LLM
  */
-async function analyzeWithLLM(historicalData: any[], eventDetails: any): Promise<string> {
+async function analyzeWithLLM(historicalData: any[], eventDetails: any): Promise<any> {
   const geminiApiKey = process.env.GEMINI_API_KEY
   
   if (!geminiApiKey) {
@@ -82,7 +121,7 @@ Focus on:
 4. 3-4 specific planning recommendations
 5. Data limitations and confidence levels
 
-IMPORTANT: Keep response under 250 words. Format as structured analysis with clear sections. Use ## for headers, **bold** for emphasis, no bullet points.
+IMPORTANT: Keep response under 150 words. Format as structured analysis with clear sections. Use ## for headers only. DO NOT use **bold** or any bold formatting. DO NOT use bullet points. Use plain text with section headers only.
 `
 
     // Initialize Gemini AI client
@@ -100,11 +139,33 @@ IMPORTANT: Keep response under 250 words. Format as structured analysis with cle
       throw new Error('No analysis generated from LLM')
     }
     
-    // Validate and truncate if necessary to stay under 250 words
-    const validatedAnalysis = truncateToWordLimit(analysis, 250)
+    // Validate and truncate if necessary to stay under 150 words
+    const validatedAnalysis = truncateToWordLimit(analysis, 150)
     
-    // Format as clean, readable output
-    return formatHistoricalEventsOutput(validatedAnalysis, eventDetails)
+    // Return structured JSON data
+    return {
+      eventType: eventDetails.eventType,
+      location: eventDetails.location,
+      date: eventDetails.date,
+      analysis: validatedAnalysis,
+      historicalData: {
+        eventsAnalyzed: historicalData.length,
+        dataRange: historicalData.length > 0 ? {
+          earliest: historicalData[historicalData.length - 1]?.date,
+          latest: historicalData[0]?.date
+        } : null,
+        averageAttendance: historicalData.length > 0 ? 
+          Math.round(historicalData.reduce((sum, event) => sum + event.actualAttendance, 0) / historicalData.length) : 0,
+        averageBudget: historicalData.length > 0 ? 
+          Math.round(historicalData.reduce((sum, event) => sum + event.budget, 0) / historicalData.length) : 0
+      },
+      metadata: {
+        dataSource: 'AI Analysis + Historical Data',
+        timestamp: new Date().toISOString(),
+        confidence: 80,
+        wordCount: countWords(validatedAnalysis)
+      }
+    }
   } catch (error) {
     console.error('LLM analysis error:', error)
     
@@ -120,101 +181,63 @@ IMPORTANT: Keep response under 250 words. Format as structured analysis with cle
 
 
 
-/**
- * Format historical events analysis into clean, readable output
- */
-function formatHistoricalEventsOutput(analysis: string, eventDetails: any): string {
-  const { eventType, location, date } = eventDetails
-  
-  // Extract key insights from the analysis text
-  const lines = analysis.split('\n').filter(line => line.trim())
-  const keyInsights = lines.slice(0, 8) // Take first 8 lines as key insights
-  
-  return `# Historical Analysis
-
-**Event Type:** ${eventType}  
-**Location:** ${location}  
-**Date:** ${date}
-
-## Key Insights
-
-${formatList(keyInsights, { maxItems: 5, compact: true })}
-
-## Summary
-
-Based on historical patterns and industry data, this analysis provides insights for your upcoming event. Key factors include weather patterns, attendance trends, and operational considerations.
-
-## Recommendations
-
-- Review historical weather patterns for your event date
-- Consider attendance trends from similar past events
-- Plan for seasonal variations and potential challenges
-- Leverage successful strategies from previous events
-
-**Note:** Analysis based on available historical data. Supplement with local event history when possible.`
-}
 
 /**
  * Generate fallback historical analysis when API is unavailable
  */
-function generateFallbackHistoricalAnalysis(eventDetails: any): string {
+function generateFallbackHistoricalAnalysis(eventDetails: any): any {
   const { eventType, location, date, expectedAttendance, budget } = eventDetails
   
-  return `# Historical Analysis
+  const fallbackAnalysis = `# Historical Analysis
 
-**Event Type:** ${eventType}  
-**Location:** ${location}  
-**Date:** ${date}
+Event Type: ${eventType}  
+Location: ${location}  
+Date: ${date}
 
 ## Attendance Prediction
 
-- **Expected:** ${expectedAttendance ? Math.round(expectedAttendance * 0.7) : 'N/A'} - ${expectedAttendance ? Math.round(expectedAttendance * 0.9) : 'N/A'} attendees
-- **Industry average:** 60-80% of expected attendance
-- **Key factors:** weather, competition, marketing, community engagement
+Expected: ${expectedAttendance ? Math.round(expectedAttendance * 0.7) : 'N/A'} - ${expectedAttendance ? Math.round(expectedAttendance * 0.9) : 'N/A'} attendees
+Industry average: 60-80% of expected attendance
 
 ## Key Success Factors
 
-- Strong community engagement and volunteer recruitment
-- Effective marketing and promotion strategy
-- Weather contingency planning
-- Clear event objectives and value proposition
+Strong community engagement and volunteer recruitment
+Effective marketing and promotion strategy
+Weather contingency planning
 
 ## Risk Factors
 
-- Weather-related attendance fluctuations
-- Competing events on similar dates
-- Venue availability and pricing changes
-- Volunteer and vendor coordination challenges
-
-## Budget Recommendations
-
-Venue & Logistics: 40%
-Marketing & Promotion: 25%
-Contingency Planning: 20%
-Supplies & Materials: 15%
-
-## Timing Insights
-
-${date ? new Date(date).toLocaleDateString('en-US', { weekday: 'long' }) : 'Weekend'} events typically see higher attendance
-Morning events (9-11 AM) often have better weather and attendance
-Consider local community calendar and school schedules
-
-## Weather Impact
-
-Historical data shows generally favorable conditions
-Average temperature: 15-25°C (ideal for outdoor events)
-Precipitation probability: 20-30% (manageable with planning)
-Wind conditions: typically light to moderate
+Weather-related attendance fluctuations
+Competing events on similar dates
+Venue availability and pricing changes
 
 ## Top Recommendations
 
 Research local event history and community preferences
 Develop weather contingency plans
 Establish strong volunteer networks
-Create comprehensive marketing timeline
-Build relationships with local vendors and venues
 
 Note: Based on industry standards. Supplement with local historical data when available.`
+
+  return {
+    eventType,
+    location,
+    date,
+    analysis: fallbackAnalysis,
+    historicalData: {
+      eventsAnalyzed: 0,
+      dataRange: null,
+      averageAttendance: expectedAttendance ? Math.round(expectedAttendance * 0.8) : 0,
+      averageBudget: budget || 0
+    },
+    metadata: {
+      dataSource: 'Fallback Analysis',
+      timestamp: new Date().toISOString(),
+      confidence: 60,
+      wordCount: countWords(fallbackAnalysis),
+      fallbackMode: true
+    }
+  }
 }
 
 /**

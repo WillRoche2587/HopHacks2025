@@ -250,19 +250,28 @@ export default function CharityAI() {
     setEventForm(prev => ({ ...prev, [field]: value }))
   }
 
+
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsAnalyzing(true)
     setError(null)
 
     try {
-      // Run all agents in parallel
-      const [weatherResult, currentEventsResult, historicResult] = await Promise.all([
-        callAgent('weather', eventForm),
-        callAgent('currentEvents', eventForm),
-        callAgent('historicEvents', eventForm)
-      ])
-
+      // Run agents with 1-second stagger between each request
+      console.log('Starting weather analysis...')
+      const weatherResult = await callAgent('weather', eventForm)
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
+      console.log('Starting current events analysis...')
+      const currentEventsResult = await callAgent('currentEvents', eventForm)
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
+      console.log('Starting historical analysis...')
+      const historicResult = await callAgent('historicEvents', eventForm)
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 1 second delay
+      console.log('Starting comprehensive scoring...')
       // Run organizer scoring agent
       const scoringResult = await callAgent('organizerScoring', {
         weatherAnalysis: weatherResult,
@@ -271,14 +280,41 @@ export default function CharityAI() {
         eventDetails: eventForm
       })
 
-      // Calculate overall score (mock for now)
-      const overallScore = Math.floor(Math.random() * 30) + 70
+      // Handle JSON responses from agents
+      const weatherAnalysis = typeof weatherResult === 'string' ? weatherResult : 
+        weatherResult.analysis || 
+        weatherResult.error || 
+        'Weather analysis unavailable'
+      
+      const currentEventsAnalysis = typeof currentEventsResult === 'string' ? currentEventsResult : 
+        currentEventsResult.analysis || 
+        currentEventsResult.error || 
+        'Current events analysis unavailable'
+      
+      const historicAnalysis = typeof historicResult === 'string' ? historicResult : 
+        historicResult.analysis || 
+        historicResult.error || 
+        'Historical analysis unavailable'
+      
+      const organizerScoring = typeof scoringResult === 'string' ? scoringResult : 
+        scoringResult.formattedAnalysis || 
+        scoringResult.error || 
+        'Comprehensive recommendations unavailable'
+      const overallScore = typeof scoringResult === 'object' && scoringResult.overallScore ? scoringResult.overallScore.total : Math.floor(Math.random() * 30) + 70
+
+      // Debug: Log the types to ensure we're getting strings
+      console.log('Analysis results types:', {
+        weatherAnalysis: typeof weatherAnalysis,
+        currentEventsAnalysis: typeof currentEventsAnalysis,
+        historicAnalysis: typeof historicAnalysis,
+        organizerScoring: typeof organizerScoring
+      })
 
       setAnalysisResults({
-        weatherAnalysis: weatherResult,
-        currentEventsAnalysis: currentEventsResult,
-        historicAnalysis: historicResult,
-        organizerScoring: scoringResult,
+        weatherAnalysis,
+        currentEventsAnalysis,
+        historicAnalysis,
+        organizerScoring,
         overallScore
       })
 
@@ -768,7 +804,7 @@ export default function CharityAI() {
                       </CardHeader>
                       <CardContent>
                         <MarkdownRenderer 
-                          content={analysisResults.weatherAnalysis}
+                          content={typeof analysisResults.weatherAnalysis === 'string' ? analysisResults.weatherAnalysis : String(analysisResults.weatherAnalysis)}
                           className="text-sm"
                         />
                       </CardContent>
@@ -784,7 +820,7 @@ export default function CharityAI() {
                       </CardHeader>
                       <CardContent>
                         <MarkdownRenderer 
-                          content={analysisResults.currentEventsAnalysis}
+                          content={typeof analysisResults.currentEventsAnalysis === 'string' ? analysisResults.currentEventsAnalysis : String(analysisResults.currentEventsAnalysis)}
                           className="text-sm"
                         />
                       </CardContent>
@@ -800,7 +836,7 @@ export default function CharityAI() {
                       </CardHeader>
                       <CardContent>
                         <MarkdownRenderer 
-                          content={analysisResults.historicAnalysis}
+                          content={typeof analysisResults.historicAnalysis === 'string' ? analysisResults.historicAnalysis : String(analysisResults.historicAnalysis)}
                           className="text-sm"
                         />
                       </CardContent>
@@ -816,7 +852,7 @@ export default function CharityAI() {
                       </CardHeader>
                       <CardContent>
                         <MarkdownRenderer 
-                          content={analysisResults.organizerScoring}
+                          content={typeof analysisResults.organizerScoring === 'string' ? analysisResults.organizerScoring : String(analysisResults.organizerScoring)}
                           className="text-sm"
                         />
                       </CardContent>
@@ -1024,7 +1060,7 @@ export default function CharityAI() {
                               <div className="text-sm">
                                 {message.role === 'assistant' ? (
                                   <MarkdownRenderer 
-                                    content={message.content}
+                                    content={typeof message.content === 'string' ? message.content : String(message.content)}
                                     className="text-sm"
                                   />
                                 ) : (

@@ -3,14 +3,14 @@ import { getDetailedAgentPrompt } from '@/lib/prompts/agentPrompts'
 import { GoogleGenAI } from '@google/genai'
 import { performAgentHealthCheck } from '@/lib/utils/healthCheck'
 import { formatList, createSectionHeader, formatMetrics } from '@/lib/utils/formatOutput'
-import { validateWordLimit, truncateToWordLimit } from '@/lib/utils/wordCount'
+import { validateWordLimit, truncateToWordLimit, countWords } from '@/lib/utils/wordCount'
 
 /**
  * Current Events Agent - Analyzes current events and traffic conditions using AI
  * @param payload - Contains location, date, and event details
  * @returns Structured AI-powered current events analysis and traffic impact assessment
  */
-export async function run(payload: any): Promise<string> {
+export async function run(payload: any): Promise<any> {
   const { location, date, eventType, expectedAttendance } = payload
 
   if (!location || !date) {
@@ -60,11 +60,33 @@ export async function run(payload: any): Promise<string> {
       throw new Error('No analysis generated from LLM')
     }
 
-    // Validate and truncate if necessary to stay under 250 words
-    const validatedAnalysis = truncateToWordLimit(rawAnalysis, 250)
+    // Use the full analysis without truncation
+    const validatedAnalysis = rawAnalysis
     
-    // Format the raw AI response directly as clean markdown
-    return formatRawAIResponse(validatedAnalysis, { eventType, location, date, eventsContext, trafficContext })
+    // Return structured JSON data
+    return {
+      eventType,
+      location,
+      date,
+      analysis: validatedAnalysis,
+      eventsContext: {
+        eventsFound: eventsContext.length,
+        events: eventsContext.slice(0, 5), // Limit to top 5 events
+        summary: `Found ${eventsContext.length} competing events`
+      },
+      trafficContext: trafficContext ? {
+        level: trafficContext.trafficLevel || 'Unknown',
+        congestionFactor: trafficContext.congestionFactor || 'Unknown',
+        peakHours: trafficContext.peakHours || [],
+        summary: `Traffic level: ${trafficContext.trafficLevel || 'Unknown'}`
+      } : null,
+      metadata: {
+        dataSource: 'AI Analysis + Event Data',
+        timestamp: new Date().toISOString(),
+        confidence: 85,
+        wordCount: countWords(validatedAnalysis)
+      }
+    }
 
   } catch (error) {
     console.error('Current events agent error:', error)
@@ -433,7 +455,7 @@ ${formatList(opportunities, { maxItems: 3, compact: true })}
 /**
  * Generate fallback analysis when API is unavailable
  */
-function generateFallbackAnalysis(payload: any): string {
+function generateFallbackAnalysis(payload: any): any {
   const { location, date, eventType, expectedAttendance } = payload
   
   const fallbackAnalysis = {
@@ -471,28 +493,42 @@ function generateFallbackAnalysis(payload: any): string {
 
 No real-time event data available for ${location} on ${date}
 Competitive analysis based on general market knowledge
-Traffic patterns estimated based on location and timing
 
 ## Top Recommendations
 
 Contact local venues directly for availability and pricing
 Check local event calendars and community boards
-Plan for potential traffic congestion during peak hours
 
 ## Risk Factors
 
 Potential venue conflicts with other events
 Traffic congestion during peak hours
-Limited real-time competitive intelligence
 
 ## Opportunities
 
 Partner with local businesses for venue and promotion
-Leverage community networks for volunteer recruitment
-Consider off-peak timing for better venue availability`
+Leverage community networks for volunteer recruitment`
   }
   
-  return formatRawAIResponse(fallbackAnalysis.rawAnalysis, { eventType, location, date, eventsContext: [], trafficContext: null })
+  return {
+    eventType,
+    location,
+    date,
+    analysis: fallbackAnalysis.rawAnalysis,
+    eventsContext: {
+      eventsFound: 0,
+      events: [],
+      summary: 'No real-time event data available'
+    },
+    trafficContext: null,
+    metadata: {
+      dataSource: 'Fallback Analysis',
+      timestamp: new Date().toISOString(),
+      confidence: 60,
+      wordCount: countWords(fallbackAnalysis.rawAnalysis),
+      fallbackMode: true
+    }
+  }
 }
 
 /**
@@ -528,8 +564,8 @@ Focus on:
 5. Confidence level in the analysis
 
 IMPORTANT: 
-- Keep response under 250 words. Be concise and actionable.
-- Format using markdown: use ## for headers, **bold** for emphasis, no bullet points.
+- Keep response under 150 words. Be concise and actionable.
+- Format using markdown: use ## for headers only. DO NOT use **bold** or any bold formatting. DO NOT use bullet points.
 - Structure with clear sections: Key Findings, Top Recommendations, Risk Factors, Opportunities.`
 }
 

@@ -20,8 +20,8 @@ Please provide helpful, actionable advice related to charitable event planning. 
 - Impact measurement and evaluation
 
 IMPORTANT: Format your response using markdown for better readability:
-- Use ## for section headers
-- Use **bold** for emphasis
+- Use ## for section headers only
+- DO NOT use **bold** or any bold formatting
 - Use numbered lists (1., 2., 3.) for step-by-step instructions
 - Use > for important tips or quotes
 - Keep response under 250 words

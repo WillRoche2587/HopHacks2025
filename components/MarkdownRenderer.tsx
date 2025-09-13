@@ -17,12 +17,12 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
         components={{
           // Customize heading styles
           h1: ({ children }) => (
-            <h1 className="text-xl font-bold text-foreground mb-3 mt-4 first:mt-0">
+            <h1 className="text-base font-bold text-foreground mb-3 mt-4 first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg font-semibold text-foreground mb-2 mt-3 first:mt-0">
+            <h2 className="text-base font-semibold text-foreground mb-2 mt-3 first:mt-0">
               {children}
             </h2>
           ),
@@ -33,35 +33,35 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           ),
           // Customize paragraph styles
           p: ({ children }) => (
-            <p className="text-sm text-muted-foreground mb-2 last:mb-0">
+            <p className="text-base text-muted-foreground mb-2 last:mb-0">
               {children}
             </p>
           ),
           // Customize list styles
           ul: ({ children }) => (
-            <ul className="list-disc list-inside text-sm text-muted-foreground mb-2 space-y-1">
+            <ul className="list-disc list-inside text-base text-muted-foreground mb-2 space-y-1">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-sm text-muted-foreground mb-2 space-y-1">
+            <ol className="list-decimal list-inside text-base text-muted-foreground mb-2 space-y-1">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-sm text-muted-foreground">
+            <li className="text-base text-muted-foreground">
               {children}
             </li>
           ),
           // Customize strong/bold text
           strong: ({ children }) => (
-            <strong className="font-semibold text-foreground">
+            <strong className="text-base font-semibold text-foreground">
               {children}
             </strong>
           ),
           // Customize emphasis/italic text
           em: ({ children }) => (
-            <em className="italic text-muted-foreground">
+            <em className="text-base italic text-muted-foreground">
               {children}
             </em>
           ),
@@ -111,12 +111,12 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             </div>
           ),
           th: ({ children }) => (
-            <th className="border border-muted-foreground/20 px-2 py-1 bg-muted/50 text-left text-xs font-medium text-foreground">
+            <th className="border border-muted-foreground/20 px-2 py-1 bg-muted/50 text-left text-base font-medium text-foreground">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-muted-foreground/20 px-2 py-1 text-xs text-muted-foreground">
+            <td className="border border-muted-foreground/20 px-2 py-1 text-base text-muted-foreground">
               {children}
             </td>
           ),
