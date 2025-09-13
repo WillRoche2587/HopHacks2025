@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 @theme {
+  /* Light mode colors */
   --color-primary: #9333ea;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f3f4f6;
@@ -25,13 +26,125 @@
   --radius: 0.5rem;
 }
 
+/* Dark mode colors */
+.dark {
+  --color-primary: #a855f7;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1f2937;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #111827;
+  --color-muted-foreground: #ffffff;
+  --color-accent: #1f2937;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #374151;
+  --color-input: #374151;
+  --color-ring: #a855f7;
+  --color-background: #0f172a;
+  --color-foreground: #ffffff;
+  --color-card: #1e293b;
+  --color-card-foreground: #ffffff;
+  --color-popover: #1e293b;
+  --color-popover-foreground: #ffffff;
+}
+
 @layer base {
-  body {
+  html, body {
     font-family: var(--font-dm-sans), system-ui, sans-serif;
+    min-height: 100vh;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-space-grotesk), system-ui, sans-serif;
+    color: var(--color-foreground);
+  }
+
+  /* Ensure dark mode covers entire viewport */
+  .dark {
+    min-height: 100vh;
+    background-color: var(--color-background);
+  }
+
+  .dark * {
+    border-color: var(--color-border);
+  }
+
+  /* Dark mode text colors - ensure all text is white or purple */
+  .dark p,
+  .dark span,
+  .dark div,
+  .dark label {
+    color: #ffffff;
+  }
+
+  .dark .text-primary-600,
+  .dark .text-primary {
+    color: #a855f7 !important;
+  }
+
+  .dark .text-muted-foreground {
+    color: #d1d5db !important;
+  }
+
+  .dark .text-green-600 {
+    color: #10b981 !important;
+  }
+
+  .dark .text-blue-600 {
+    color: #3b82f6 !important;
+  }
+
+  .dark .text-purple-600 {
+    color: #a855f7 !important;
+  }
+
+  .dark .text-orange-600 {
+    color: #f59e0b !important;
+  }
+
+  .dark .text-yellow-600 {
+    color: #eab308 !important;
+  }
+
+  .dark .text-red-600 {
+    color: #ef4444 !important;
+  }
+
+  /* Make all icons have purple circle background in dark mode */
+  .dark .lucide-calendar,
+  .dark .lucide-map-pin,
+  .dark .lucide-clock,
+  .dark .lucide-users,
+  .dark .lucide-dollar-sign,
+  .dark .lucide-check-circle,
+  .dark .lucide-bar-chart-3,
+  .dark .lucide-alert-triangle {
+    color: #000000 !important;
+    background-color: #a855f7 !important;
+    border-radius: 50% !important;
+    padding: 4px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  /* Style date input calendar icon in dark mode */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    background-color: #a855f7 !important;
+    border-radius: 50% !important;
+    padding: 4px !important;
+    cursor: pointer;
+    filter: invert(1) !important;
+  }
+
+  .dark input[type="date"]::-moz-calendar-picker-indicator {
+    background-color: #a855f7 !important;
+    border-radius: 50% !important;
+    padding: 4px !important;
+    cursor: pointer;
+    filter: invert(1) !important;
   }
 }
 

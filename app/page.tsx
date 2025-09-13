@@ -34,7 +34,9 @@ import {
   DollarSign,
   X,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Moon,
+  Sun
 } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -83,6 +85,7 @@ interface PreviousEvent {
 export default function CharityAI() {
   // State management
   const [activeTab, setActiveTab] = useState<'analysis' | 'previous' | 'assistant' | 'settings'>('analysis')
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [eventForm, setEventForm] = useState<EventFormData>({
     eventType: '',
     location: '',
@@ -98,22 +101,42 @@ export default function CharityAI() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
-  const [isChatOpen, setIsChatOpen] = useState(false)
   const [previousEvents, setPreviousEvents] = useState<PreviousEvent[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingEvents, setIsLoadingEvents] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Initialize user session
+  // Initialize user session and dark mode
   useEffect(() => {
     const initializeUser = async () => {
       // Use mock user ID for now (bypassing Supabase)
       setUserId('mock-user-id')
     }
 
+    // Load dark mode preference from localStorage
+    const savedDarkMode = localStorage.getItem('darkMode')
+    if (savedDarkMode) {
+      setIsDarkMode(JSON.parse(savedDarkMode))
+    }
+
     initializeUser()
   }, [])
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    // Save preference to localStorage
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode))
+  }, [isDarkMode])
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode)
+  }
 
   // Load previous events
   useEffect(() => {
@@ -375,15 +398,30 @@ export default function CharityAI() {
 
   return (
     <ErrorBoundary>
+      <div className={`${isDarkMode ? 'dark' : ''} min-h-screen bg-background`}>
       <SidebarProvider>
       {/* Sidebar Navigation */}
       <Sidebar className="hidden lg:block">
         <SidebarHeader>
-          <div className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-primary-600" />
-            <h1 className="text-xl font-bold font-space-grotesk text-primary-600">
-              CharityAI
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Heart className="h-8 w-8 text-primary-600" />
+              <h1 className="text-xl font-bold font-space-grotesk text-primary-600">
+                CharityAI
+              </h1>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleDarkMode}
+              className="flex items-center space-x-1"
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </SidebarHeader>
         
@@ -454,10 +492,24 @@ export default function CharityAI() {
               <h1 className="text-lg font-bold font-space-grotesk text-primary-600">
                 CharityAI
               </h1>
-        </div>
-            <SidebarTrigger className="lg:hidden">
-              <BarChart3 className="h-5 w-5" />
-            </SidebarTrigger>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleDarkMode}
+                className="flex items-center space-x-1"
+              >
+                {isDarkMode ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </Button>
+              <SidebarTrigger className="lg:hidden">
+                <BarChart3 className="h-5 w-5" />
+              </SidebarTrigger>
+            </div>
           </div>
         </div>
 
@@ -1066,40 +1118,8 @@ export default function CharityAI() {
         </div>
       </div>
 
-      {/* Floating Chat Widget */}
-      {!isChatOpen && (
-        <Button
-          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-50"
-          onClick={() => setIsChatOpen(true)}
-        >
-          <MessageSquare className="h-6 w-6" />
-        </Button>
-      )}
-
-      {isChatOpen && (
-        <div className="fixed bottom-6 right-6 w-80 h-96 bg-white border rounded-lg shadow-lg z-50">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold">Quick Chat</h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsChatOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Need quick help? Ask me anything about event planning!
-            </p>
-            <div className="space-y-2">
-              <Input placeholder="Type your question..." />
-              <Button className="w-full">Send</Button>
-            </div>
-          </div>
-    </div>
-      )}
       </SidebarProvider>
+      </div>
     </ErrorBoundary>
   )
 }

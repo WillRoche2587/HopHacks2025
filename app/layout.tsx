@@ -26,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${dmSans.variable} font-sans`}>
+      <body className={`${spaceGrotesk.variable} ${dmSans.variable} font-sans min-h-screen bg-background text-foreground`}>
         <div className="min-h-screen bg-background">
           {children}
         </div>
