@@ -125,3 +125,4 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+node_modules/
