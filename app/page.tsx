@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 import { 
   Sidebar, 
   SidebarProvider, 
@@ -611,10 +610,13 @@ export default function ImpactGauge() {
         <SidebarHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-              <h1 className="text-xl font-bold font-space-grotesk text-primary-600">
-                ImpactGauge
-              </h1>
+              <Heart className="h-8 w-8 text-primary-600" />
+              <div>
+                <h1 className="text-xl font-bold font-space-grotesk text-primary-600">
+                  ImpactGauge
+                </h1>
+                <p className="text-xs text-muted-foreground">Powered by Gemini</p>
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -694,10 +696,13 @@ export default function ImpactGauge() {
         <div className="lg:hidden bg-white border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Heart className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-              <h1 className="text-lg font-bold font-space-grotesk text-primary-600">
-                ImpactGauge
-              </h1>
+              <Heart className="h-6 w-6 text-primary-600" />
+              <div>
+                <h1 className="text-lg font-bold font-space-grotesk text-primary-600">
+                  ImpactGauge
+                </h1>
+                <p className="text-xs text-muted-foreground">Powered by Gemini</p>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <Button

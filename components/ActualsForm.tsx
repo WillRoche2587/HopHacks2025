@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 
 interface ActualsFormProps {
   eventId: string
@@ -34,19 +33,17 @@ export default function ActualsForm({ eventId, onSuccess }: ActualsFormProps) {
     setIsSubmitting(true)
 
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          actuals: {
-            ...actuals,
-            submitted_at: new Date().toISOString()
-          }
-        })
-        .eq('id', eventId)
+      // Mock submission - no database storage
+      console.log('Mock actuals submission:', {
+        eventId,
+        actuals: {
+          ...actuals,
+          submitted_at: new Date().toISOString()
+        }
+      })
 
-      if (error) {
-        throw error
-      }
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Reset form
       setActuals({

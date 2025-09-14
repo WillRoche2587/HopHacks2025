@@ -30,8 +30,7 @@ ImpactGauge is a comprehensive platform designed to optimize charitable event pl
 
 ### Backend
 - **API Routes**: Next.js API routes with multi-agent system
-- **Database**: Supabase with PostgreSQL
-- **Authentication**: Supabase Auth with anonymous support
+- **Data Storage**: Mock data implementation (no database)
 - **Smart Analytics**: Advanced data processing and insights
 - **External APIs**: OpenWeatherMap for weather data
 
@@ -97,7 +96,6 @@ ImpactGauge is a comprehensive platform designed to optimize charitable event pl
 ### Prerequisites
 - Node.js 18+ 
 - pnpm package manager
-- Supabase account
 - Google Gemini API key
 - OpenWeatherMap API key
 
@@ -120,10 +118,9 @@ pnpm dev
 
 ### Environment Variables
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GEMINI_API_KEY=your_gemini_api_key
-OPENWEATHER_API_KEY=your_openweather_api_key
+WEATHER_API_KEY=your_openweather_api_key
+MAPS_API_KEY=your_google_maps_api_key
 ```
 
 ### Project Structure
@@ -142,7 +139,6 @@ OPENWEATHER_API_KEY=your_openweather_api_key
 │   ├── prompts/          # Analysis templates
 │   ├── types/            # TypeScript types
 │   └── utils.ts          # Utility functions
-└── supabase/             # Database schema
 ```
 
 ## 🚀 Deployment
@@ -157,25 +153,14 @@ OPENWEATHER_API_KEY=your_openweather_api_key
 - **Railway**: Full-stack deployment with database
 - **Docker**: Containerized deployment option
 
-## 📊 Database Schema
+## 📊 Data Storage
 
-### Events Table
-```sql
-CREATE TABLE events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_type TEXT NOT NULL,
-  location TEXT NOT NULL,
-  date DATE NOT NULL,
-  duration TEXT,
-  expected_attendance INTEGER,
-  budget DECIMAL,
-  audience TEXT,
-  special_requirements TEXT,
-  user_id UUID REFERENCES auth.users(id),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-```
+The application uses mock data for demonstration purposes. All event data and analysis results are stored in memory and reset on page refresh. This approach allows for:
+
+- **Quick Setup**: No database configuration required
+- **Demo Ready**: Immediate functionality for presentations
+- **Development Focus**: Concentrate on AI analysis features
+- **Easy Migration**: Can be easily connected to a real database later
 
 ## 🤝 Contributing
 
@@ -193,7 +178,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **shadcn/ui** for the component library
 - **Tailwind CSS** for the styling framework
-- **Supabase** for the backend infrastructure
 - **Google Gemini** for advanced analytics
 - **OpenWeatherMap** for weather data
 

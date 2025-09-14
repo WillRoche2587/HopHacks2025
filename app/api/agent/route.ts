@@ -4,7 +4,6 @@ import { run as currentEventsAgent } from '@/lib/agents/currentEventsAgent'
 import { run as historicEventsAgent } from '@/lib/agents/historicEventsAgent'
 import { run as organizerScoringAgent } from '@/lib/agents/organizerScoringAgent'
 import { run as aiAssistantAgent } from '@/lib/agents/aiAssistantAgent'
-import { supabaseAdmin } from '@/lib/supabaseClient'
 
 /**
  * API Route Handler for Agent Operations
@@ -57,29 +56,7 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    // Database implementation paused - skip storing results for now
-    // TODO: Re-enable database storage when ready
-    /*
-    if (eventId && userId && supabaseAdmin) {
-      try {
-        const { error } = await supabaseAdmin
-          .from('agent_results')
-          .insert({
-            event_id: eventId,
-            agent_name: agent,
-            response_text: result
-          })
-
-        if (error) {
-          console.error('Database insert error:', error)
-          // Don't fail the request if database insert fails
-        }
-      } catch (dbError) {
-        console.error('Database operation error:', dbError)
-        // Don't fail the request if database operation fails
-      }
-    }
-    */
+    // Database storage removed - using mock data instead
 
     return NextResponse.json({
       success: true,

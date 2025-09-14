@@ -17,7 +17,6 @@ export interface AgentHealthCheck {
     geminiApi: HealthStatus
     weatherApi?: HealthStatus
     mapsApi?: HealthStatus
-    supabase?: HealthStatus
   }
 }
 
@@ -184,60 +183,6 @@ export async function checkMapsApiHealth(apiKey?: string): Promise<HealthStatus>
   }
 }
 
-/**
- * Check if Supabase is accessible
- */
-export async function checkSupabaseHealth(url?: string, key?: string): Promise<HealthStatus> {
-  const startTime = Date.now()
-  
-  if (!url || !key) {
-    return {
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'SUPABASE_URL or SUPABASE_KEY not configured'
-    }
-  }
-
-  try {
-    // Test with a simple query
-    const response = await fetch(`${url}/rest/v1/`, {
-      method: 'GET',
-      headers: {
-        'apikey': key,
-        'Authorization': `Bearer ${key}`
-      },
-      signal: AbortSignal.timeout(5000) // 5 second timeout
-    })
-
-    const responseTime = Date.now() - startTime
-
-    if (response.ok) {
-      return {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        responseTime,
-        details: { 
-          service: 'Supabase',
-          url: url
-        }
-      }
-    } else {
-      return {
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        responseTime,
-        error: `HTTP ${response.status}: ${response.statusText}`
-      }
-    }
-  } catch (error) {
-    return {
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      responseTime: Date.now() - startTime,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
-  }
-}
 
 /**
  * Perform comprehensive health check for an agent
@@ -246,15 +191,12 @@ export async function performAgentHealthCheck(agentName: string): Promise<AgentH
   const geminiApiKey = process.env.GEMINI_API_KEY
   const weatherApiKey = process.env.WEATHER_API_KEY
   const mapsApiKey = process.env.MAPS_API_KEY
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_KEY
 
   // Check all dependencies in parallel
-  const [geminiHealth, weatherHealth, mapsHealth, supabaseHealth] = await Promise.allSettled([
+  const [geminiHealth, weatherHealth, mapsHealth] = await Promise.allSettled([
     checkGeminiApiHealth(geminiApiKey),
     checkWeatherApiHealth(weatherApiKey),
-    checkMapsApiHealth(mapsApiKey),
-    checkSupabaseHealth(supabaseUrl, supabaseKey)
+    checkMapsApiHealth(mapsApiKey)
   ])
 
   // Determine overall agent health
@@ -265,8 +207,7 @@ export async function performAgentHealthCheck(agentName: string): Promise<AgentH
       error: 'Health check failed'
     },
     weatherApi: weatherHealth.status === 'fulfilled' ? weatherHealth.value : undefined,
-    mapsApi: mapsHealth.status === 'fulfilled' ? mapsHealth.value : undefined,
-    supabase: supabaseHealth.status === 'fulfilled' ? supabaseHealth.value : undefined
+    mapsApi: mapsHealth.status === 'fulfilled' ? mapsHealth.value : undefined
   }
 
   // Determine overall status
@@ -279,7 +220,7 @@ export async function performAgentHealthCheck(agentName: string): Promise<AgentH
   }
 
   // Check if any optional services are unhealthy
-  const optionalServices = [dependencies.weatherApi, dependencies.mapsApi, dependencies.supabase]
+  const optionalServices = [dependencies.weatherApi, dependencies.mapsApi]
   const unhealthyOptional = optionalServices.filter(service => 
     service && service.status === 'unhealthy'
   ).length
@@ -294,12 +235,11 @@ export async function performAgentHealthCheck(agentName: string): Promise<AgentH
       status: overallStatus,
       timestamp: new Date().toISOString(),
       details: {
-        totalDependencies: 4,
+        totalDependencies: 3,
         healthyDependencies: [
           dependencies.geminiApi,
           dependencies.weatherApi,
-          dependencies.mapsApi,
-          dependencies.supabase
+          dependencies.mapsApi
         ].filter(dep => dep && dep.status === 'healthy').length
       }
     },
