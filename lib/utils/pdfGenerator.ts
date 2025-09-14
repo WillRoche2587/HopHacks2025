@@ -71,14 +71,27 @@ export const generateEventAnalysisPDF = async (
   // Helper function to add text with proper wrapping
   const addText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 11): number => {
     pdf.setFontSize(fontSize)
-    const lines = pdf.splitTextToSize(text, maxWidth)
-    const lineHeight = fontSize * 0.4
     
-    lines.forEach((line: string, index: number) => {
-      pdf.text(line, x, y + (index * lineHeight))
+    // Split text by explicit line breaks first, then wrap each line
+    const paragraphs = text.split('\n')
+    let currentY = y
+    const lineHeight = fontSize * 0.45
+    
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+      if (paragraph.trim() === '') {
+        currentY += lineHeight * 0.5 // Add small spacing for empty lines
+        return
+      }
+      
+      const lines = pdf.splitTextToSize(paragraph.trim(), maxWidth)
+      lines.forEach((line: string, lineIndex: number) => {
+        pdf.text(line, x, currentY + (lineIndex * lineHeight))
+      })
+      
+      currentY += (lines.length * lineHeight) + (paragraphIndex < paragraphs.length - 1 ? lineHeight * 0.3 : 0)
     })
     
-    return y + (lines.length * lineHeight) + 5
+    return currentY + 5
   }
 
   // Helper function to add section header
@@ -95,18 +108,66 @@ export const generateEventAnalysisPDF = async (
     return y + 15
   }
 
-  // Helper function to clean text
+  // Helper function to clean and format text
   const cleanText = (text: string): string => {
     return text
       .replace(/[^\x20-\x7E\n]/g, '') // Remove non-printable characters
-      .replace(/#{1,6}\s*/g, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/^\s*[-*+]\s+/gm, '• ')
-      .replace(/\s+/g, ' ')
+      .replace(/#{1,6}\s*/g, '') // Remove markdown headers
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+      .replace(/`(.*?)`/g, '$1') // Remove code markdown
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+      .replace(/^\s*[-*+]\s+/gm, '• ') // Convert list items to bullets
+      .replace(/\n\s*\n/g, '\n\n') // Normalize paragraph breaks
+      .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
+  }
+
+  // Helper function to format analysis content with proper structure
+  const formatAnalysisContent = (content: string): string => {
+    if (!content) return 'No analysis data available for this section.'
+    
+    // Split content into logical sections based on common patterns
+    let formatted = content
+      .replace(/\b(Key Findings|Top Recommendations|Risk Factors|Opportunities|Confidence Level):/g, '\n\n$1:\n')
+      .replace(/\b(Weather Analysis|Current Events Analysis|Historical Analysis|Recommendations):/g, '\n\n$1:\n')
+      .replace(/\b(Summary|Conclusion|Next Steps):/g, '\n\n$1:\n')
+      
+    // Add line breaks after sentences that end with periods followed by capital letters
+    formatted = formatted.replace(/\.([A-Z])/g, '.\n$1')
+    
+    // Clean up multiple line breaks
+    formatted = formatted.replace(/\n{3,}/g, '\n\n')
+    
+    // Add proper spacing around bullet points
+    formatted = formatted.replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2')
+    
+    // Clean up the final result
+    return cleanText(formatted)
+  }
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  // Helper function to format date
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString)
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date)
+    } catch {
+      return dateString
+    }
   }
 
   // Add header function
@@ -176,18 +237,18 @@ export const generateEventAnalysisPDF = async (
   pdf.rect(margin, yPosition, contentWidth, 85, 'F')
   
   yPosition += 8
-  pdf.setFontSize(10)
+  pdf.setFontSize(12)
   pdf.setFont('helvetica', 'normal')
   
   const eventDetails = [
     ['Event Type:', eventData.eventType],
     ['Location:', eventData.location],
-    ['Date:', eventData.date],
+    ['Date:', formatDate(eventData.date)],
     ['Duration:', eventData.duration],
-    ['Expected Attendance:', eventData.expectedAttendance.toString()],
-    ['Budget:', `$${eventData.budget.toLocaleString()}`],
+    ['Expected Attendance:', eventData.expectedAttendance.toLocaleString() + ' people'],
+    ['Budget:', formatCurrency(eventData.budget)],
     ['Target Audience:', eventData.audience],
-    ['Special Requirements:', eventData.specialRequirements]
+    ['Special Requirements:', eventData.specialRequirements || 'None specified']
   ]
 
   eventDetails.forEach(([label, value]) => {
@@ -197,7 +258,7 @@ export const generateEventAnalysisPDF = async (
     
     pdf.setTextColor(0, 0, 0)
     pdf.setFont('helvetica', 'normal')
-    yPosition = addText(value, margin + 45, yPosition, contentWidth - 50, 10)
+    yPosition = addText(value, margin + 45, yPosition, contentWidth - 50, 12)
   })
 
   yPosition += 15
@@ -217,7 +278,9 @@ export const generateEventAnalysisPDF = async (
   pdf.text(scoreText, margin + (contentWidth - scoreWidth) / 2, yPosition + 25)
   
   pdf.setFontSize(10)
-  pdf.text('Comprehensive Analysis Score', margin + (contentWidth - pdf.getTextWidth('Comprehensive Analysis Score')) / 2, yPosition + 35)
+  const scoreLabel = 'Comprehensive Analysis Score'
+  const labelWidth = pdf.getTextWidth(scoreLabel)
+  pdf.text(scoreLabel, margin + (contentWidth - labelWidth) / 2, yPosition + 35)
 
   yPosition += 50
 
@@ -233,13 +296,14 @@ export const generateEventAnalysisPDF = async (
     yPosition = checkNewPage(80)
     yPosition = addSectionHeader(title, yPosition)
     
-    const cleanContent = cleanText(content)
+    const cleanContent = formatAnalysisContent(content)
     if (cleanContent.length > 0) {
       pdf.setFillColor(lightBackground[0], lightBackground[1], lightBackground[2])
       
-      // Calculate content height
+      // Calculate content height with better spacing
       const lines = pdf.splitTextToSize(cleanContent, contentWidth - 10)
-      const contentHeight = Math.max(40, lines.length * 4 + 10)
+      const lineHeight = 4.5
+      const contentHeight = Math.max(40, lines.length * lineHeight + 15)
       
       pdf.rect(margin, yPosition, contentWidth, contentHeight, 'F')
       
@@ -248,7 +312,18 @@ export const generateEventAnalysisPDF = async (
       pdf.setFont('helvetica', 'normal')
       yPosition = addText(cleanContent, margin + 5, yPosition + 8, contentWidth - 10, 10)
       
-      yPosition += 15
+      yPosition += 20
+    } else {
+      // Handle empty content
+      pdf.setFillColor(lightBackground[0], lightBackground[1], lightBackground[2])
+      pdf.rect(margin, yPosition, contentWidth, 30, 'F')
+      
+      pdf.setTextColor(100, 100, 100)
+      pdf.setFontSize(10)
+      pdf.setFont('helvetica', 'italic')
+      pdf.text('No analysis data available for this section.', margin + 5, yPosition + 15)
+      
+      yPosition += 40
     }
   })
 
@@ -265,8 +340,11 @@ export const generateEventAnalysisPDF = async (
     pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pageHeight - 10)
   }
 
-  // Save the PDF
-  const fileName = `ImpactGauge_${eventData.eventType.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_analysis_${new Date().toISOString().split('T')[0]}.pdf`
+  // Save the PDF with better filename formatting
+  const eventTypeClean = eventData.eventType.replace(/[^a-z0-9\s]/gi, '').replace(/\s+/g, '_').toLowerCase()
+  const dateClean = new Date().toISOString().split('T')[0]
+  const scoreClean = analysisResults.overallScore
+  const fileName = `ImpactGauge_${eventTypeClean}_${scoreClean}pts_${dateClean}.pdf`
   pdf.save(fileName)
 }
 
