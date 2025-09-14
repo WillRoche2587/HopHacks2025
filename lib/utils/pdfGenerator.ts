@@ -56,9 +56,6 @@ export const generateEventAnalysisPDF = async (
   const darkGray = [31, 41, 55]
   const lightBackground = [251, 245, 255]
 
-  // Get the logo
-  const logoBase64 = await getLogoBase64()
-
   // Helper function to check if we need a new page
   const checkNewPage = (neededSpace: number): number => {
     if (yPosition + neededSpace > pageHeight - 30) {
@@ -69,7 +66,7 @@ export const generateEventAnalysisPDF = async (
   }
 
   // Helper function to add text with proper wrapping
-  const addText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 11): number => {
+  const addText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10): number => {
     pdf.setFontSize(fontSize)
     
     // Split text by explicit line breaks first, then wrap each line
@@ -100,7 +97,7 @@ export const generateEventAnalysisPDF = async (
     pdf.rect(margin, y, contentWidth, 10, 'F')
     
     pdf.setTextColor(white[0], white[1], white[2])
-    pdf.setFontSize(12)
+    pdf.setFontSize(11)
     pdf.setFont('helvetica', 'bold')
     pdf.text(title, margin + 3, y + 7)
     
@@ -175,48 +172,43 @@ export const generateEventAnalysisPDF = async (
     pdf.setFillColor(lightBackground[0], lightBackground[1], lightBackground[2])
     pdf.rect(0, 0, pageWidth, 50, 'F')
     
-    // Add logo
-    try {
-      pdf.addImage(logoBase64, 'PNG', margin, 10, 30, 30)
-    } catch (error) {
-      // Draw a better purple heart as fallback
-      pdf.setFillColor(charityPurple[0], charityPurple[1], charityPurple[2])
-      const heartX = margin + 15
-      const heartY = 32
-      const scale = 0.8
-      
-      // Create heart shape using path with curves
-      const heartPath = [
-        [heartX, heartY + 6*scale],
-        [heartX - 13*scale, heartY - 5*scale],
-        [heartX - 13*scale, heartY - 9*scale],
-        [heartX - 9*scale, heartY - 13*scale],
-        [heartX - 5*scale, heartY - 13*scale],
-        [heartX, heartY - 9*scale],
-        [heartX + 5*scale, heartY - 13*scale],
-        [heartX + 9*scale, heartY - 13*scale],
-        [heartX + 13*scale, heartY - 9*scale],
-        [heartX + 13*scale, heartY - 5*scale]
-      ]
-      
-      // Draw filled polygon for heart shape
-      pdf.setDrawColor(charityPurple[0], charityPurple[1], charityPurple[2])
-      pdf.setLineWidth(0)
-      
-      // Start path
-      pdf.lines(heartPath.slice(1).map((point, i) => [
-        point[0] - heartPath[i][0], 
-        point[1] - heartPath[i][1]
-      ]), heartPath[0][0], heartPath[0][1], [1, 1], 'F')
-    }
+    // Draw purple heart
+    pdf.setFillColor(charityPurple[0], charityPurple[1], charityPurple[2])
+    const heartX = margin + 15
+    const heartY = 32
+    const scale = 0.8
+    
+    // Create heart shape using path with curves
+    const heartPath = [
+      [heartX, heartY + 6*scale],
+      [heartX - 13*scale, heartY - 5*scale],
+      [heartX - 13*scale, heartY - 9*scale],
+      [heartX - 9*scale, heartY - 13*scale],
+      [heartX - 5*scale, heartY - 13*scale],
+      [heartX, heartY - 9*scale],
+      [heartX + 5*scale, heartY - 13*scale],
+      [heartX + 9*scale, heartY - 13*scale],
+      [heartX + 13*scale, heartY - 9*scale],
+      [heartX + 13*scale, heartY - 5*scale]
+    ]
+    
+    // Draw filled polygon for heart shape
+    pdf.setDrawColor(charityPurple[0], charityPurple[1], charityPurple[2])
+    pdf.setLineWidth(0)
+    
+    // Start path
+    pdf.lines(heartPath.slice(1).map((point, i) => [
+      point[0] - heartPath[i][0], 
+      point[1] - heartPath[i][1]
+    ]), heartPath[0][0], heartPath[0][1], [1, 1], 'F')
     
     pdf.setTextColor(charityPurple[0], charityPurple[1], charityPurple[2])
-    pdf.setFontSize(20)
+    pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
     pdf.text('ImpactGauge', margin + 40, 25)
     
     pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2])
-    pdf.setFontSize(12)
+    pdf.setFontSize(10)
     pdf.setFont('helvetica', 'normal')
     pdf.text('Event Analysis Report', margin + 40, 35)
     
@@ -237,7 +229,7 @@ export const generateEventAnalysisPDF = async (
   pdf.rect(margin, yPosition, contentWidth, 85, 'F')
   
   yPosition += 8
-  pdf.setFontSize(12)
+  pdf.setFontSize(10)
   pdf.setFont('helvetica', 'normal')
   
   const eventDetails = [
@@ -258,7 +250,7 @@ export const generateEventAnalysisPDF = async (
     
     pdf.setTextColor(0, 0, 0)
     pdf.setFont('helvetica', 'normal')
-    yPosition = addText(value, margin + 45, yPosition, contentWidth - 50, 12)
+    yPosition = addText(value, margin + 45, yPosition, contentWidth - 50, 10)
   })
 
   yPosition += 15
@@ -277,7 +269,7 @@ export const generateEventAnalysisPDF = async (
   const scoreWidth = pdf.getTextWidth(scoreText)
   pdf.text(scoreText, margin + (contentWidth - scoreWidth) / 2, yPosition + 25)
   
-  pdf.setFontSize(10)
+  pdf.setFontSize(9)
   const scoreLabel = 'Comprehensive Analysis Score'
   const labelWidth = pdf.getTextWidth(scoreLabel)
   pdf.text(scoreLabel, margin + (contentWidth - labelWidth) / 2, yPosition + 35)
@@ -308,9 +300,9 @@ export const generateEventAnalysisPDF = async (
       pdf.rect(margin, yPosition, contentWidth, contentHeight, 'F')
       
       pdf.setTextColor(0, 0, 0)
-      pdf.setFontSize(10)
+      pdf.setFontSize(9)
       pdf.setFont('helvetica', 'normal')
-      yPosition = addText(cleanContent, margin + 5, yPosition + 8, contentWidth - 10, 10)
+      yPosition = addText(cleanContent, margin + 5, yPosition + 8, contentWidth - 10, 9)
       
       yPosition += 20
     } else {
@@ -319,7 +311,7 @@ export const generateEventAnalysisPDF = async (
       pdf.rect(margin, yPosition, contentWidth, 30, 'F')
       
       pdf.setTextColor(100, 100, 100)
-      pdf.setFontSize(10)
+      pdf.setFontSize(9)
       pdf.setFont('helvetica', 'italic')
       pdf.text('No analysis data available for this section.', margin + 5, yPosition + 15)
       
