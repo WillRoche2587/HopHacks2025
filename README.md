@@ -25,8 +25,6 @@ ImpactGauge is a comprehensive platform designed to optimize charitable event pl
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with custom design system
 - **Components**: shadcn/ui component library
-- **Icons**: Lucide React
-- **Fonts**: Space Grotesk (headings), DM Sans (body)
 
 ### Backend
 - **API Routes**: Next.js API routes with multi-agent system
@@ -40,56 +38,6 @@ ImpactGauge is a comprehensive platform designed to optimize charitable event pl
 3. **Historic Events Agent**: Historical pattern analysis
 4. **Organizer Scoring Agent**: Comprehensive event scoring
 5. **Planning Assistant**: Interactive event planning and community impact guidance
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: Purple (#9333ea) - Main brand color
-- **Success**: Green (#10b981) - Positive feedback
-- **Warning**: Orange (#f59e0b) - Caution states
-- **Info**: Blue (#3b82f6) - Information display
-- **Destructive**: Red (#ef4444) - Error states
-
-### Typography
-- **Headings**: Space Grotesk (modern, geometric)
-- **Body**: DM Sans (readable, friendly)
-- **Responsive**: Fluid typography scaling
-
-### Components
-- **Cards**: Elevated surfaces with subtle shadows
-- **Buttons**: Multiple variants with hover states
-- **Forms**: Accessible inputs with validation
-- **Navigation**: Sidebar with active states
-- **Loading**: Skeleton screens and spinners
-
-## 📱 User Interface
-
-### Main Navigation
-- **Sidebar**: Fixed navigation with 4 main sections
-- **Mobile**: Collapsible sidebar with hamburger menu
-- **Active States**: Visual feedback for current page
-
-### Event Analysis Tab
-- **Form**: Comprehensive event details input
-- **Validation**: Real-time form validation
-- **Results**: Grid layout with agent-specific cards
-- **Scoring**: Visual impact score display
-
-### Previous Events Tab
-- **Gallery**: Responsive grid of event cards
-- **Impact Scores**: Color-coded progress bars
-- **Empty State**: Helpful guidance for new users
-
-### Planning Assistant Tab
-- **Chat Interface**: Message bubbles with timestamps
-- **Welcome Screen**: Capability overview
-- **Loading States**: Real-time feedback
-
-### Settings Tab
-- **Account**: Organization and contact information
-- **Notifications**: Preference toggles
-- **API Config**: External service configuration
-- **Privacy**: Data and analytics controls
 
 ## 🔧 Development
 
@@ -173,17 +121,6 @@ The application uses mock data for demonstration purposes. All event data and an
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **shadcn/ui** for the component library
-- **Tailwind CSS** for the styling framework
-- **Google Gemini** for advanced analytics
-- **OpenWeatherMap** for weather data
-
-## 📞 Support
-
-For support, email support@impactgauge.com or join our Discord community.
 
 ---
 
