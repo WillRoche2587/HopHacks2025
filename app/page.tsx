@@ -85,7 +85,7 @@ interface PreviousEvent {
   impactScore: number
 }
 
-export default function CharityAI() {
+export default function ImpactGauge() {
   // State management
   const [activeTab, setActiveTab] = useState<'analysis' | 'previous' | 'assistant' | 'settings'>('analysis')
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -461,7 +461,7 @@ export default function CharityAI() {
             <div className="flex items-center space-x-2">
               <Heart className="h-8 w-8 text-primary-600" />
               <h1 className="text-xl font-bold font-space-grotesk text-primary-600">
-                CharityAI
+                ImpactGauge
               </h1>
             </div>
             <Button
@@ -516,7 +516,7 @@ export default function CharityAI() {
                 aria-current={activeTab === 'assistant' ? 'page' : undefined}
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
-                AI Assistant
+                Impact Assistant
               </Button>
             </SidebarMenuItem>
             
@@ -537,14 +537,14 @@ export default function CharityAI() {
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-64">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Heart className="h-6 w-6 text-primary-600" />
               <h1 className="text-lg font-bold font-space-grotesk text-primary-600">
-                CharityAI
+                ImpactGauge
               </h1>
             </div>
             <div className="flex items-center space-x-2">
@@ -593,7 +593,7 @@ export default function CharityAI() {
               <div>
                 <h2 className="text-2xl font-bold mb-2">Event Details</h2>
                 <p className="text-muted-foreground">
-                  Provide details about your charitable event for comprehensive AI analysis
+                  Provide details about your charitable event for comprehensive logistic analysis
                 </p>
               </div>
 
@@ -691,7 +691,7 @@ export default function CharityAI() {
                         placeholder="e.g., Volunteer coordination"
                         rows={2}
                       />
-      </div>
+                    </div>
 
                     <Button 
                       type="submit" 
@@ -1001,17 +1001,17 @@ export default function CharityAI() {
           {activeTab === 'assistant' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-2">AI Assistant</h2>
+                <h2 className="text-2xl font-bold mb-2">Impact Assistant</h2>
                 <p className="text-muted-foreground">
-                  Ask me anything about charitable event planning
+                  Ask me anything! (Charity-Related of course)
                 </p>
               </div>
 
               <Card className="h-[600px]">
                 <CardHeader className="bg-muted">
-                  <CardTitle>CharityAI Assistant</CardTitle>
+                  <CardTitle>Impact Assistant</CardTitle>
                   <CardDescription>
-                    Ask me anything about charitable event planning
+                    Get guidance on charitable event planning and community impact
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -1019,27 +1019,27 @@ export default function CharityAI() {
                     {chatMessages.length === 0 ? (
                       <div className="text-center text-muted-foreground">
                         <div className="mb-4">
-                          <h3 className="text-lg font-medium mb-2">Welcome to CharityAI Assistant!</h3>
+                          <h3 className="text-lg font-medium mb-2">Welcome to Impact Assistant!</h3>
                           <p className="text-sm">
-                            I can help you with event planning, volunteer management, fundraising strategies, and more.
+                            I can help you maximize community impact through strategic event planning, volunteer coordination, and effective fundraising.
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="p-3 bg-muted rounded-lg">
-                            <strong>Event Planning</strong>
-                            <p className="text-xs mt-1">Logistics, timelines, checklists</p>
+                            <strong>Philanthropy Planning</strong>
+                            <p className="text-xs mt-1">Maximize community benefit and reach</p>
                           </div>
                           <div className="p-3 bg-muted rounded-lg">
-                            <strong>Volunteer Management</strong>
-                            <p className="text-xs mt-1">Recruitment, coordination, retention</p>
+                            <strong>Social Responsibility</strong>
+                            <p className="text-xs mt-1">Build lasting volunteer relationships</p>
                           </div>
                           <div className="p-3 bg-muted rounded-lg">
-                            <strong>Fundraising</strong>
-                            <p className="text-xs mt-1">Strategies, donor engagement</p>
+                            <strong>Sustainable Fundraising</strong>
+                            <p className="text-xs mt-1">Ethical donor engagement strategies</p>
                           </div>
                           <div className="p-3 bg-muted rounded-lg">
                             <strong>Marketing</strong>
-                            <p className="text-xs mt-1">Promotion, social media, outreach</p>
+                            <p className="text-xs mt-1">Ensure positive community outcomes</p>
               </div>
                         </div>
                       </div>
@@ -1096,7 +1096,7 @@ export default function CharityAI() {
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask me about event planning..."
+                        placeholder="Ask me anything!"
                         disabled={isChatLoading}
                         className="flex-1"
                         aria-label="Chat input"

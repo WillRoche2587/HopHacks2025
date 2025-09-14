@@ -7,7 +7,7 @@ export async function run(payload: { message: string; conversationHistory?: any[
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     
-    const prompt = `You are CharityAI Assistant, a helpful AI assistant specialized in charitable event planning, volunteer management, fundraising strategies, and community engagement.
+    const prompt = `You are ImpactGauge Assistant, a helpful community impact specialist focused on charitable event planning, volunteer management, fundraising strategies, and community engagement.
 
 User's question: ${payload.message}
 

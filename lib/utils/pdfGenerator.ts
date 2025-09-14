@@ -23,7 +23,7 @@ interface AnalysisResults {
 // Function to convert image file to base64
 const getLogoBase64 = async (): Promise<string> => {
   try {
-    const response = await fetch('/charityAI.png')
+    const response = await fetch('/ImpactGauge.png')
     const blob = await response.blob()
     
     return new Promise((resolve, reject) => {
@@ -49,7 +49,7 @@ export const generateEventAnalysisPDF = async (
   const contentWidth = pageWidth - 2 * margin
   let yPosition = margin
 
-  // CharityAI color scheme
+  // ImpactGauge color scheme
   const charityPurple = [147, 51, 234]
   const charityPurpleLight = [196, 181, 253]
   const white = [255, 255, 255]
@@ -121,7 +121,7 @@ export const generateEventAnalysisPDF = async (
       // Draw a better purple heart as fallback
       pdf.setFillColor(charityPurple[0], charityPurple[1], charityPurple[2])
       const heartX = margin + 15
-      const heartY = 20
+      const heartY = 32
       const scale = 0.8
       
       // Create heart shape using path with curves
@@ -152,7 +152,7 @@ export const generateEventAnalysisPDF = async (
     pdf.setTextColor(charityPurple[0], charityPurple[1], charityPurple[2])
     pdf.setFontSize(20)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('CharityAI', margin + 40, 25)
+    pdf.text('ImpactGauge', margin + 40, 25)
     
     pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2])
     pdf.setFontSize(12)
@@ -261,12 +261,12 @@ export const generateEventAnalysisPDF = async (
     pdf.setFont('helvetica', 'normal')
     pdf.setTextColor(100, 100, 100)
     
-    pdf.text('CharityAI Event Analysis', margin, pageHeight - 10)
+    pdf.text('ImpactGauge Event Analysis', margin, pageHeight - 10)
     pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pageHeight - 10)
   }
 
   // Save the PDF
-  const fileName = `CharityAI_${eventData.eventType.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_analysis_${new Date().toISOString().split('T')[0]}.pdf`
+  const fileName = `ImpactGauge_${eventData.eventType.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_analysis_${new Date().toISOString().split('T')[0]}.pdf`
   pdf.save(fileName)
 }
 

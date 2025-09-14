@@ -15,8 +15,8 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'CharityAI - AI-Powered Charitable Event Planning',
-  description: 'Comprehensive AI-powered platform for charitable event planning, optimization, and impact prediction',
+  title: 'ImpactGauge - Community Impact Assessment Platform',
+  description: 'Comprehensive platform for charitable event planning, optimization, and community impact prediction',
 }
 
 export default function RootLayout({

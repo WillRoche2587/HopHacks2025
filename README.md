@@ -1,14 +1,14 @@
-# CharityAI - AI-Powered Charitable Event Planning Platform
+# ImpactGauge - Community Impact Assessment Platform
 
-CharityAI is a comprehensive AI-powered platform designed to optimize charitable event planning, analysis, and impact prediction. Built with Next.js, TypeScript, and modern UI components, it provides intelligent insights to help maximize the success and impact of charitable events.
+ImpactGauge is a comprehensive platform designed to optimize charitable event planning, analysis, and impact prediction. Built with Next.js, TypeScript, and modern UI components, it provides intelligent insights to help maximize the success and societal impact of charitable events and community initiatives.
 
 ## 🚀 Features
 
 ### Core Functionality
-- **Multi-Agent AI Analysis**: Weather, current events, historical data, and comprehensive scoring
+- **Comprehensive Analysis**: Weather, current events, historical data, and comprehensive impact scoring
 - **Event Planning Interface**: Comprehensive form with validation and real-time feedback
 - **Previous Events Gallery**: Historical event tracking with impact score visualization
-- **AI Assistant Chat**: Conversational interface for event planning guidance
+- **Planning Assistant**: Interactive guidance for event planning and community engagement
 - **Settings Management**: Account, notifications, API configuration, and privacy controls
 
 ### Technical Features
@@ -32,15 +32,15 @@ CharityAI is a comprehensive AI-powered platform designed to optimize charitable
 - **API Routes**: Next.js API routes with multi-agent system
 - **Database**: Supabase with PostgreSQL
 - **Authentication**: Supabase Auth with anonymous support
-- **AI Integration**: Google Gemini API
+- **Smart Analytics**: Advanced data processing and insights
 - **External APIs**: OpenWeatherMap for weather data
 
-### AI Agents
+### Analysis Modules
 1. **Weather Agent**: Weather analysis and forecasting
 2. **Current Events Agent**: Local event conflict analysis
 3. **Historic Events Agent**: Historical pattern analysis
 4. **Organizer Scoring Agent**: Comprehensive event scoring
-5. **AI Assistant Agent**: Conversational event planning support
+5. **Planning Assistant**: Interactive event planning and community impact guidance
 
 ## 🎨 Design System
 
@@ -81,7 +81,7 @@ CharityAI is a comprehensive AI-powered platform designed to optimize charitable
 - **Impact Scores**: Color-coded progress bars
 - **Empty State**: Helpful guidance for new users
 
-### AI Assistant Tab
+### Planning Assistant Tab
 - **Chat Interface**: Message bubbles with timestamps
 - **Welcome Screen**: Capability overview
 - **Loading States**: Real-time feedback
@@ -138,8 +138,8 @@ OPENWEATHER_API_KEY=your_openweather_api_key
 │   ├── ErrorBoundary.tsx # Error handling
 │   └── LoadingSpinner.tsx # Loading states
 ├── lib/                  # Utility libraries
-│   ├── agents/           # AI agent implementations
-│   ├── prompts/          # AI prompts
+│   ├── agents/           # Analysis module implementations
+│   ├── prompts/          # Analysis templates
 │   ├── types/            # TypeScript types
 │   └── utils.ts          # Utility functions
 └── supabase/             # Database schema
@@ -194,12 +194,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **shadcn/ui** for the component library
 - **Tailwind CSS** for the styling framework
 - **Supabase** for the backend infrastructure
-- **Google Gemini** for AI capabilities
+- **Google Gemini** for advanced analytics
 - **OpenWeatherMap** for weather data
 
 ## 📞 Support
 
-For support, email support@charityai.com or join our Discord community.
+For support, email support@impactgauge.com or join our Discord community.
 
 ---
 

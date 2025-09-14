@@ -10,7 +10,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
     <div
       ref={ref}
       className={cn(
-        "flex h-full w-64 flex-col border-r bg-background",
+        "flex h-screen w-64 flex-col border-r bg-background fixed left-0 top-0 z-40",
         className
       )}
       {...props}

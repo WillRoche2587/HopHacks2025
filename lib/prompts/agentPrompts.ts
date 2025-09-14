@@ -105,7 +105,8 @@ CRITICAL SUCCESS FACTORS:
 - Factor in the ${audience} audience demographics and preferences
 - Provide realistic assessments based on the ${budget} budget and ${location} location constraints
 
-Remember: This analysis is for a real event happening on ${date} in ${location}. Your recommendations will directly impact the success of this ${eventType} event.`
+Remember: This analysis is for a real event happening on ${date} in ${location}. Your recommendations will directly impact the success of this ${eventType} event.
+`
 }
 
 /**
@@ -146,7 +147,7 @@ HISTORICAL PERFORMANCE & TREND ANALYSIS FOCUS:
 • Provide predictive insights based on historical data patterns`,
 
     'Organizer Scoring Agent': `
-COMPREHENSIVE READINESS & STRATEGIC ASSESSMENT FOCUS:
+DETAILED ANALYSIS FRAMEWORK:GIC ASSESSMENT FOCUS:
 • Evaluate overall event readiness across all critical dimensions
 • Assess resource allocation efficiency for ${budget} budget
 • Analyze team preparedness and skill gaps
